@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+use v5.38;
+use lib 'lib';
+
+my $day = shift;
+die 'requires day number'
+	if !$day || $day !~ m{\A \d+ \z}x;
+
+my $pkg = "Day${day}::Solution";
+eval "use $pkg; 1" or die 'no such solution';
+
+my $obj = $pkg->new;
+$obj->run_first;
+$obj->run_second;
+
