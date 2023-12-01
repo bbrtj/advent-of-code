@@ -4,12 +4,10 @@ use Lingua::EN::Numbers qw(num2en);
 
 use class;
 
-extends 'Solution';
+with 'Solution';
 
 sub run_first ($self)
 {
-	$self->SUPER::run_first;
-
 	my $total = 0;
 	foreach my $line ($self->input->@*) {
 		my ($first) = $line =~ m{(\d)};
@@ -17,13 +15,11 @@ sub run_first ($self)
 		$total += "$first$last";
 	}
 
-	say $total;
+	$self->output($total);
 }
 
 sub run_second ($self)
 {
-	$self->SUPER::run_second;
-
 	my %numbers_en = map { num2en($_) => $_ } 1 .. 9;
 	my $regex_part = join '|', keys %numbers_en, '\d';
 
@@ -38,6 +34,6 @@ sub run_second ($self)
 		$total += "$first$last";
 	}
 
-	say $total;
+	$self->output($total);
 }
 
