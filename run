@@ -2,13 +2,14 @@
 
 use v5.38;
 use lib 'lib';
+use lib 'local/lib/perl5';
 
 my $day = shift;
 die 'requires day number'
 	if !$day || $day !~ m{\A \d+ \z}x;
 
 my $pkg = "Day${day}::Solution";
-eval "use $pkg; 1" or die 'no such solution';
+eval "use $pkg; 1" or die "error loading solution: $@";
 
 my $obj = $pkg->new;
 $obj->run_first;
