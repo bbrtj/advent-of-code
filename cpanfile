@@ -5,3 +5,5 @@ requires 'Mooish::AttributeBuilder';
 requires 'Type::Tiny';
 requires 'namespace::autoclean';
 
+requires 'Lingua::EN::Numbers';
+
