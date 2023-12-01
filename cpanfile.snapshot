@@ -61,6 +61,17 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Lingua-EN-Numbers-2.03
+    pathname: N/NE/NEILB/Lingua-EN-Numbers-2.03.tar.gz
+    provides:
+      Lingua::EN::Numbers 2.03
+    requirements:
+      Exporter 0
+      ExtUtils::MakeMaker 6.3
+      perl 5.006
+      strict 0
+      vars 0
+      warnings 0
   Module-Build-0.4234
     pathname: L/LE/LEONT/Module-Build-0.4234.tar.gz
     provides:

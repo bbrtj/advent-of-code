@@ -5,6 +5,8 @@ requires 'Mooish::AttributeBuilder';
 requires 'Type::Tiny';
 requires 'namespace::autoclean';
 
+requires 'Lingua::EN::Numbers';
+
 # may uncomment for speed
 # requires 'MooX::XSConstructor';
 # requires 'Class::XSAccessor';
