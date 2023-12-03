@@ -17,32 +17,35 @@ sub _parse_input ($self, $input)
 	my $search = Day3::Search->new;
 	my @symbols;
 
-	my $has_number = !!0;
-	my $number_from;
+	my sub save_number ($from_x, $to_x, $y)
+	{
+		my $number = join '', $input->[$y]->@[$from_x .. $to_x];
+		$search->add($number, $from_x, $y, length $number);
+	}
+
+	my $number_from = undef;
 	foreach my ($pos_y, $items_x) (indexed $input->@*) {
 		foreach my ($pos_x, $item) (indexed $items_x->@*) {
-			my $has_number_now = $item =~ /\d/;
+			my $has_number = $item =~ /\d/;
 
-			if (!$has_number && $has_number_now) {
+			if (!defined $number_from && $has_number) {
 				# number start
 				$number_from = $pos_x;
-				$has_number = !!1;
 			}
-			elsif ($has_number && !$has_number_now) {
+			elsif (defined $number_from && !$has_number) {
 				# number end
-				my $number_y = $pos_x == 0 ? $pos_y - 1 : $pos_y;
-				my $number_to = $pos_x == 0 ? $input->[$number_y]->$#* : $pos_x - 1;
-				my $number = join '', $input->[$number_y]->@[$number_from .. $number_to];
-				$search->add($number, $number_from, $number_to, $number_y);
-
-				$has_number = !!0;
+				save_number($number_from, $pos_x - 1, $pos_y);
+				$number_from = undef;
 			}
 
-			if (!$has_number_now) {
+			if (!$has_number) {
 				next if $item eq '.';
 				push @symbols, [$item, $pos_x, $pos_y];
 			}
 		}
+
+		save_number($number_from, $input->[$pos_y]->$#*, $pos_y)
+			if defined $number_from;
 	}
 
 	return ($search, \@symbols);
