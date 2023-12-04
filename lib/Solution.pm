@@ -93,7 +93,8 @@ sub _test ($self, $part, $orig)
 		$test_result = trim($result) eq trim($expected);
 	}
 	catch ($e) {
-		$test_result = undef;
+		my $file_missing = $e =~ /No data file/;
+		$test_result = $file_missing ? undef : !!0;
 	}
 
 	return $test_result;
@@ -103,8 +104,16 @@ foreach my $part (1 .. 2) {
 	around "part_$part" => sub ($orig, $self) {
 		$self->_init_part($part);
 		my $tested = $self->_test($part, $orig);
+
 		$self->_init_part($part);
-		my $result = $self->$orig;
+		my $result;
+		try {
+			$result = $self->$orig;
+		}
+		catch ($e) {
+			$result = "Exception: $e";
+		}
+
 		$self->_deinit_part($result, $tested);
 	};
 }
@@ -126,6 +135,6 @@ sub input ($self)
 		}
 	}
 
-	die "couldn't get $base data for day $day part $part";
+	die "No data file in '$base' for day $day part $part";
 }
 
