@@ -5,13 +5,22 @@ use lib 'lib';
 use lib 'local/lib/perl5';
 
 my $day = shift;
-die 'requires day number'
-	if !$day || $day !~ m{\A \d+ \z}x;
+my @days;
+if ($day && $day =~ m{ \A (\d+) (?: \.\. (\d+))? \z }x) {
+	my $day_from = $1;
+	my $day_to = $2 || $day_from;
+	@days = $day_from .. $day_to;
+}
 
-my $pkg = "Day${day}::Solution";
-eval "use $pkg; 1" or die "error loading solution: $@";
+die 'requires day number(s)'
+	if !@days;
 
-my $obj = $pkg->new;
-$obj->run_first;
-$obj->run_second;
+foreach my $day (@days) {
+	my $pkg = "Day${day}::Solution";
+	eval "use $pkg; 1" or die "error loading solution for day $day:\n$@";
+
+	my $obj = $pkg->new;
+	$obj->part_1;
+	$obj->part_2;
+}
 
