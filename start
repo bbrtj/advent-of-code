@@ -1,0 +1,76 @@
+#!/usr/bin/env perl
+
+use v5.38;
+use autodie;
+use HTTP::Cookies;
+use LWP::UserAgent;
+use Time::Piece;
+use File::Path qw(make_path);
+use File::Basename qw(dirname);
+
+sub slurp ($file_name)
+{
+	local $/;
+	open my $fh, '<', $file_name;
+	my $content = readline $fh;
+
+	chomp $content;
+	return $content;
+}
+
+my $day = shift;
+die 'requires day number'
+	if !$day || $day !~ m{ \A \d+ \z }x;
+
+my $year = shift;
+$year ||= Time::Piece->new->year;
+
+my $solution_content = <<PERL;
+package Day${day}::Solution;
+
+use class;
+
+with 'Solution';
+
+sub part_1 (\$self)
+{
+	...
+}
+
+sub part_2 (\$self)
+{
+	...
+}
+PERL
+
+my $jar = HTTP::Cookies->new;
+$jar->set_cookie(0, session => slurp('.session'), '/', 'adventofcode.com', 443, 0, 0, 9999, 0);
+
+say 'Fetching input data...';
+my $ua = LWP::UserAgent->new(cookie_jar => $jar, timeout => 10);
+my $response = $ua->get("https://adventofcode.com/${year}/day/${day}/input");
+if (!$response->is_success) {
+    die $response->status_line;
+}
+
+my $input_content = $response->decoded_content;
+
+my %new_files = (
+	"input/day${day}.txt" => $input_content,
+	"test/day${day}.txt" => '',
+	"test/expected/day${day}_part1.txt" => '',
+	"test/expected/day${day}_part2.txt" => '',
+	"lib/Day${day}/Solution.pm" => $solution_content,
+);
+
+foreach my $file_name (keys %new_files) {
+	my $content = $new_files{$file_name};
+	make_path dirname $file_name;
+
+	say "Creating $file_name...";
+	open my $fh, '>', $file_name;
+	print {$fh} $content;
+}
+
+say 'All done!';
+
