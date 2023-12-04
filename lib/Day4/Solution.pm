@@ -40,7 +40,7 @@ sub part_1 ($self)
 		$sum += $card_worth;
 	}
 
-	$self->output($sum);
+	return $sum;
 }
 
 sub part_2 ($self)
@@ -72,6 +72,6 @@ sub part_2 ($self)
 			for $processed->[0]->@*;
 	}
 
-	$self->output(sum0 map { $_->[1] } @cards_processed);
+	return sum0 map { $_->[1] } @cards_processed;
 }
 

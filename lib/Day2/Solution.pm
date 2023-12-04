@@ -76,7 +76,7 @@ sub part_1 ($self)
 			if $self->_is_game_possible($game, \%available);
 	}
 
-	$self->output($sum);
+	return $sum;
 }
 
 sub part_2 ($self)
@@ -90,6 +90,6 @@ sub part_2 ($self)
 		$sum += product @items;
 	}
 
-	$self->output($sum);
+	return $sum;
 }
 
