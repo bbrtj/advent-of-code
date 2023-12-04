@@ -17,7 +17,7 @@ sub _parse_input ($self, $line)
 	return [\@winning_numbers, \@got_numbers];
 }
 
-sub run_first ($self)
+sub part_1 ($self)
 {
 	my @cards = map { $self->_parse_input($_) } $self->input->@*;
 
@@ -43,10 +43,9 @@ sub run_first ($self)
 	$self->output($sum);
 }
 
-sub run_second ($self)
+sub part_2 ($self)
 {
 	my @cards = map { $self->_parse_input($_) } $self->input->@*;
-
 	my @cards_processed;
 
 	foreach my $card_number (keys @cards) {

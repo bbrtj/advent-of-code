@@ -6,7 +6,7 @@ use class;
 
 with 'Solution';
 
-sub run_first ($self)
+sub part_1 ($self)
 {
 	my $total = 0;
 	foreach my $line ($self->input->@*) {
@@ -18,7 +18,7 @@ sub run_first ($self)
 	$self->output($total);
 }
 
-sub run_second ($self)
+sub part_2 ($self)
 {
 	my %numbers_en = map { num2en($_) => $_ } 1 .. 9;
 	my $regex_part = join '|', keys %numbers_en, '\d';
