@@ -3,18 +3,14 @@ package Solution;
 use Types::Common -types;
 use Time::HiRes qw(time);
 use Term::ANSIColor;
+use builtin qw(trim);
 
 use class -role;
+no warnings qw(experimental::builtin);
 
 has field '_running_part' => (
 	isa => Tuple[PositiveInt, PositiveInt],
 	writer => 1,
-);
-
-has field '_output' => (
-	isa => ArrayRef[Str],
-	lazy => sub { [] },
-	clearer => 1,
 );
 
 has field '_timer' => (
@@ -31,23 +27,17 @@ has field '_input_base' => (
 
 requires qw(part_1 part_2);
 
-sub output ($self, $str)
-{
-	push $self->_output->@*, $str;
-}
-
 sub _init_part ($self, $part)
 {
 	my ($day) = (ref $self) =~ m/Day(\d+)/;
 	$self->_set_running_part([$day, $part]);
 
 	$self->_clear_input_base;
-	$self->_clear_output;
 	$self->_clear_timer;
 	$self->_timer;
 }
 
-sub _deinit_part ($self, $test_result)
+sub _deinit_part ($self, $result, $test_result)
 {
 	my $time = $self->_timer;
 	$self->_clear_timer;
@@ -84,7 +74,7 @@ sub _deinit_part ($self, $test_result)
 
 	# print separator and actual result
 	say colored('-------------------------------', 'white');
-	say join "\n", $self->_output->@*;
+	say $result;
 
 	# print empty line to separate parts
 	say '';
@@ -92,24 +82,21 @@ sub _deinit_part ($self, $test_result)
 
 sub _test ($self, $part, $orig)
 {
-	my $result;
+	my $test_result;
 	try {
 		$self->_set_input_base('test');
-		$self->$orig;
+		my $result = $self->$orig;
 
 		$self->_set_input_base('test/expected');
-		my @expected = $self->input->@*;
-		my @output = $self->_output->@*;
+		my $expected = $self->input->[0];
 
-		$result = @expected == @output;
-		$result &&= $expected[$_] eq $output[$_]
-			for keys @expected;
+		$test_result = trim($result) eq trim($expected);
 	}
 	catch ($e) {
-		$result = undef;
+		$test_result = undef;
 	}
 
-	return $result;
+	return $test_result;
 }
 
 foreach my $part (1 .. 2) {
@@ -117,8 +104,8 @@ foreach my $part (1 .. 2) {
 		$self->_init_part($part);
 		my $tested = $self->_test($part, $orig);
 		$self->_init_part($part);
-		$self->$orig;
-		$self->_deinit_part($tested);
+		my $result = $self->$orig;
+		$self->_deinit_part($result, $tested);
 	};
 }
 
