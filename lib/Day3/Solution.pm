@@ -51,7 +51,7 @@ sub _parse_input ($self, $input)
 	return ($search, \@symbols);
 }
 
-sub run_first ($self)
+sub part_1 ($self)
 {
 	my ($search, $symbols) = $self->_parse_input($self->input);
 
@@ -64,7 +64,7 @@ sub run_first ($self)
 	$self->output($sum);
 }
 
-sub run_second ($self)
+sub part_2 ($self)
 {
 	my ($search, $symbols) = $self->_parse_input($self->input);
 
