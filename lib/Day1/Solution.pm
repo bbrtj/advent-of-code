@@ -15,7 +15,7 @@ sub part_1 ($self)
 		$total += "$first$last";
 	}
 
-	$self->output($total);
+	return $total;
 }
 
 sub part_2 ($self)
@@ -34,6 +34,6 @@ sub part_2 ($self)
 		$total += "$first$last";
 	}
 
-	$self->output($total);
+	return $total;
 }
 

@@ -61,7 +61,7 @@ sub part_1 ($self)
 		$sum += sum0 $search->find_around($symbol->@*)->@*;
 	}
 
-	$self->output($sum);
+	return $sum;
 }
 
 sub part_2 ($self)
@@ -79,6 +79,6 @@ sub part_2 ($self)
 		$sum += product @found;
 	}
 
-	$self->output($sum);
+	return $sum;
 }
 
