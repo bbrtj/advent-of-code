@@ -26,7 +26,6 @@ sub run_first ($self)
 		my ($winning, $got) = $card->@*;
 		my $card_worth = 0;
 
-		$winning->@* = sort { $b <=> $a } $winning->@*;
 		$got->@* = sort { $b <=> $a } $got->@*;
 
 		foreach my $number_one ($winning->@*) {
@@ -48,14 +47,12 @@ sub run_second ($self)
 {
 	my @cards = map { $self->_parse_input($_) } $self->input->@*;
 
-	my $sum = 0;
 	my @cards_processed;
 
 	foreach my $card_number (keys @cards) {
 		my ($winning, $got) = $cards[$card_number]->@*;
 		my $card_worth = 0;
 
-		$winning->@* = sort { $b <=> $a } $winning->@*;
 		$got->@* = sort { $b <=> $a } $got->@*;
 
 		foreach my $number_one ($winning->@*) {
