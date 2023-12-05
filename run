@@ -4,6 +4,8 @@ use v5.38;
 use lib 'lib';
 use lib 'local/lib/perl5';
 
+use Solution::External;
+
 my $day = shift;
 my @days;
 if ($day && $day =~ m{ \A (\d+) (?: \.\. (\d+))? \z }x) {
@@ -15,11 +17,24 @@ if ($day && $day =~ m{ \A (\d+) (?: \.\. (\d+))? \z }x) {
 die 'requires day number(s)'
 	if !@days;
 
-foreach my $day (@days) {
-	my $pkg = "Day${day}::Solution";
-	eval "use $pkg; 1" or die "error loading solution for day $day:\n$@";
+my $language = shift;
 
-	my $obj = $pkg->new;
+foreach my $day (@days) {
+	my $obj;
+
+	if ($language) {
+		$obj = Solution::External->new(
+			day => $day,
+			language => $language,
+		);
+	}
+	else {
+		my $pkg = "Day${day}::Solution";
+		eval "use $pkg; 1" or die "error loading solution for day $day:\n$@";
+
+		$obj = $pkg->new;
+	}
+
 	$obj->part_1;
 	$obj->part_2;
 }
