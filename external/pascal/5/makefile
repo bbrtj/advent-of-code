@@ -1,0 +1,3 @@
+compile:
+	fpc solution.pas
+
