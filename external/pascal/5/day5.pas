@@ -1,6 +1,7 @@
 unit Day5;
 
 {$mode objfpc}{$H+}{$J-}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -14,7 +15,11 @@ type
 	TRange = record
 		Lower: TNumber;
 		Upper: TNumber;
+
+		class operator = (const vR1, vR2: TRange): Boolean;
 	end;
+
+	TRangeList = specialize TFPGList<TRange>;
 
 	TMapping = class
 	strict private
@@ -25,6 +30,7 @@ type
 		constructor Create(const vRange: TRange; vTo: TNumber);
 
 		function TryMap(var vValue: TNumber): Boolean;
+		function TryMapRange(vRange: TRange; vRangesMapped, vRangesUnmapped: TRangeList): Boolean;
 	end;
 
 	TMappingList = specialize TFPGObjectList<TMapping>;
@@ -40,6 +46,7 @@ type
 
 		procedure AddMapping(vTo, vFrom, vLength: TNumber);
 		function MapNumber(vValue: TNumber): TNumber;
+		function MapRanges(vRange: TRange): TRangeList;
 	end;
 
 	TAlmanacMapList = specialize TFPGObjectList<TAlmanacMap>;
@@ -104,8 +111,42 @@ begin
 end;
 
 function PartTwo(vNumbers: TNumberList; vMaps: TAlmanacMapList): TNumber;
+var
+	vRange: TRange;
+	vRanges: TRangeList;
+	vNewRanges: TRangeList;
+	vTmpRanges: TRangeList;
+	vInd: Integer;
+	vMap: TAlmanacMap;
 begin
-	result := -1;
+	vRanges := TRangeList.Create;
+	vNewRanges := TRangeList.Create;
+
+	for vInd := 0 to (vNumbers.Count div 2) - 1 do begin
+		vRange.Lower := vNumbers[vInd * 2];
+		vRange.Upper := vRange.Lower + vNumbers[vInd * 2 + 1] - 1;
+		vRanges.Add(vRange);
+	end;
+
+	for vMap in vMaps do begin
+		for vRange in vRanges do begin
+			vTmpRanges := vMap.MapRanges(vRange);
+			vNewRanges.AddList(vTmpRanges);
+			vTmpRanges.Free;
+		end;
+
+		vRanges.Clear;
+		vRanges.AddList(vNewRanges);
+		vNewRanges.Clear;
+	end;
+
+	vNewRanges.Free;
+
+	result := vRanges[0].Lower;
+	for vRange in vRanges do
+		result := Min(result, vRange.Lower);
+
+	vRanges.Free;
 end;
 
 function RunPart(vPart: Integer; vInput: TStringList): String;
@@ -128,6 +169,11 @@ begin
 	vMaps.Free;
 end;
 
+class operator TRange.= (const vR1, vR2: TRange): Boolean;
+begin
+	result := (vR1.Lower = vR2.Lower) and (vR1.Upper = vR2.Upper);
+end;
+
 constructor TMapping.Create(const vRange: TRange; vTo: TNumber);
 begin
 	FRangeFrom := vRange;
@@ -139,6 +185,34 @@ begin
 	result := (vValue >= FRangeFrom.Lower) and (vValue <= FRangeFrom.Upper);
 	if result then
 		vValue := FBaseTo + (vValue - FRangeFrom.Lower);
+end;
+
+function TMapping.TryMapRange(vRange: TRange; vRangesMapped, vRangesUnmapped: TRangeList): Boolean;
+var
+	vNewRange: TRange;
+begin
+	result := (vRange.Lower <= FRangeFrom.Upper) and (vRange.Upper >= FRangeFrom.Lower);
+	if not result then exit;
+
+	if vRange.Lower < FRangeFrom.Lower then begin
+		vNewRange.Lower := vRange.Lower;
+		vNewRange.Upper := FRangeFrom.Lower - 1;
+		vRangesUnmapped.Add(vNewRange);
+
+		vRange.Lower := FRangeFrom.Lower;
+	end;
+
+	if vRange.Upper > FRangeFrom.Upper then begin
+		vNewRange.Upper := vRange.Upper;
+		vNewRange.Lower := FRangeFrom.Upper + 1;
+		vRangesUnmapped.Add(vNewRange);
+
+		vRange.Upper := FRangeFrom.Upper;
+	end;
+
+	vNewRange.Lower := FBaseTo + (vRange.Lower - FRangeFrom.Lower);
+	vNewRange.Upper := FBaseTo + (vRange.Upper - FRangeFrom.Lower);
+	vRangesMapped.Add(vNewRange);
 end;
 
 constructor TAlmanacMap.Create();
@@ -169,6 +243,33 @@ begin
 	for vMapping in FMappings do begin
 		if vMapping.TryMap(result) then exit;
 	end;
+end;
+
+function TAlmanacMap.MapRanges(vRange: TRange): TRangeList;
+var
+	vMapping: TMapping;
+	vRanges: TRangeList;
+	vNewRanges: TRangeList;
+begin
+	result := TRangeList.Create;
+	vRanges := TRangeList.Create;
+	vNewRanges := TRangeList.Create;
+	vRanges.Add(vRange);
+
+	for vMapping in FMappings do begin
+		for vRange in vRanges do begin
+			if not vMapping.TryMapRange(vRange, result, vNewRanges) then
+				vNewRanges.Add(vRange);
+		end;
+
+		vRanges.Clear;
+		vRanges.AddList(vNewRanges);
+		vNewRanges.Clear;
+	end;
+
+	result.AddList(vRanges);
+	vRanges.Free;
+	vNewRanges.Free;
 end;
 
 end.
