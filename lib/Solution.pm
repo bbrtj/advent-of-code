@@ -27,39 +27,30 @@ has field '_input_base' => (
 
 requires qw(part_1 part_2);
 
+sub day_number ($self)
+{
+	(ref $self) =~ m/Day(\d+)/;
+	return $1;
+}
+
 sub _init_part ($self, $part)
 {
-	my ($day) = (ref $self) =~ m/Day(\d+)/;
-	$self->_set_running_part([$day, $part]);
+	$self->_set_running_part([$self->day_number, $part]);
 
 	$self->_clear_input_base;
 	$self->_clear_timer;
 	$self->_timer;
 }
 
-sub _deinit_part ($self, $result, $test_result)
+sub _print_greeting ($self)
 {
-	my $time = $self->_timer;
-	$self->_clear_timer;
-	$time = $self->_timer - $time;
-
-	# print banner
-	say colored('Advent of Code', 'white');
-
-	# print day and part number
 	my ($day, $part) = $self->_running_part->@*;
-	print "Day $day, Part $part - took ";
 
-	# print time with coloring
-	my $time_color = 'green';
-	my $threshold = 0.1;
-	for (qw(bright_green bright_yellow yellow bright_red red)) {
-		last if $time < $threshold;
-		$threshold *= 2;
-		$time_color = $_;
-	}
-	printf colored("%.5fs\n", $time_color), $time;
+	say colored("Advent of Code [$day/$part]", 'white');
+}
 
+sub _print_test_results ($self, $test_result)
+{
 	# print test result with coloring
 	my $test_color = 'green';
 	$test_color = 'red' if !$test_result;
@@ -70,11 +61,28 @@ sub _deinit_part ($self, $result, $test_result)
 			? 'FAIL'
 			: 'N/A'
 	;
-	say 'Test: ' . colored($test_result, $test_color);
+	say 'Test result: ' . colored($test_result, $test_color);
+}
 
-	# print separator and actual result
-	say colored('-------------------------------', 'white');
-	say $result;
+sub _print_results ($self, $result)
+{
+	my $time = $self->_timer;
+	$self->_clear_timer;
+	$time = $self->_timer - $time;
+
+	# print result
+	say 'Result: ' . colored($result, 'blue');
+
+	# print time with coloring
+	my $time_color = 'green';
+	my $threshold = 0.01;
+	for (qw(bright_green yellow red)) {
+		last if $time < $threshold;
+		$threshold *= 10;
+		$time_color = $_;
+	}
+	$time = sprintf colored("%.5fs", $time_color), $time;
+	say "Run-time: $time";
 
 	# print empty line to separate parts
 	say '';
@@ -103,18 +111,22 @@ sub _test ($self, $part, $orig)
 foreach my $part (1 .. 2) {
 	around "part_$part" => sub ($orig, $self) {
 		$self->_init_part($part);
+		$self->_print_greeting;
+
 		my $tested = $self->_test($part, $orig);
 
 		$self->_init_part($part);
+		$self->_print_test_results($tested);
+
 		my $result;
 		try {
 			$result = $self->$orig;
 		}
 		catch ($e) {
-			$result = "Exception: $e";
+			$result = "[exception] $e";
 		}
 
-		$self->_deinit_part($result, $tested);
+		$self->_print_results($result);
 	};
 }
 
