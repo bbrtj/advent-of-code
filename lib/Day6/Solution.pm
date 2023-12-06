@@ -31,14 +31,28 @@ sub _calculate ($self, $races = $self->_parse_input)
 		my ($time, $distance) = $race->@*;
 
 		my $to_beat = ceil sqrt $distance;
-		my $half = int($time / 2);
-		my $winning_ways = ($half - $to_beat) * 2;
-		for (my $ind = $to_beat; $ind >= 0; --$ind) {
-			my $result = $ind * ($time - $ind);
-			last unless $result > $distance;
-			$winning_ways += 2;
+		my $winning_ways = (int($time / 2) - $to_beat + 1) * 2;
+
+		# approximate border value by halving
+		my $half = $to_beat;
+		my $current = $half;
+		while ($half > 0) {
+			$half = int($half / 2);
+			my $result = $current * ($time - $current);
+			my $mul = $result <=> $distance;
+
+			$current = $current - $mul * $half;
 		}
 
+		# adjust border value to take into account rounding halves
+		foreach my $real_current ($current - 2 .. $current + 2) {
+			if ($real_current * ($time - $real_current) > $distance) {
+				$current = $real_current;
+				last;
+			}
+		}
+
+		$winning_ways += ($to_beat - $current) * 2;
 		$winning_ways -= 1
 			if $winning_ways && $time % 2 == 0;
 
