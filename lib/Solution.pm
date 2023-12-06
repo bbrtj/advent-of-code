@@ -53,12 +53,12 @@ sub _print_test_results ($self, $test_result)
 {
 	# print test result with coloring
 	my $test_color = 'green';
-	$test_color = 'red' if !$test_result;
+	$test_color = 'red' if ref $test_result;
 	$test_color = 'yellow' if !defined $test_result;
-	$test_result = $test_result
-		? 'PASS'
-		: defined $test_result
-			? 'FAIL'
+	$test_result = ref $test_result
+		? "FAIL ($$test_result)"
+		: $test_result
+			? 'PASS'
 			: 'N/A'
 	;
 	say 'Test result: ' . colored($test_result, $test_color);
@@ -98,7 +98,12 @@ sub _test ($self, $part, $orig)
 		$self->_set_input_base('test/expected');
 		my $expected = $self->input->[0];
 
-		$test_result = trim($result) eq trim($expected);
+		if (trim($result) eq trim($expected)) {
+			$test_result = !!1;
+		}
+		else {
+			$test_result = \$result;
+		}
 	}
 	catch ($e) {
 		my $file_missing = $e =~ /No data file/;
