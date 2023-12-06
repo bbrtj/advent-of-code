@@ -7,7 +7,7 @@ interface
 
 uses SysUtils, Classes, FGL, Math, Character;
 
-function RunPart(vPart: Integer; vInput: TStringList): String;
+function RunPart(Part: Integer; InputData: TStringList): String;
 
 type
 	TNumber = Int64;
@@ -16,7 +16,7 @@ type
 		Lower: TNumber;
 		Upper: TNumber;
 
-		class operator = (const vR1, vR2: TRange): Boolean;
+		class operator = (const R1, R2: TRange): Boolean;
 	end;
 
 	TRangeList = specialize TFPGList<TRange>;
@@ -27,10 +27,10 @@ type
 		FBaseTo: TNumber;
 
 	public
-		constructor Create(const vRange: TRange; vTo: TNumber);
+		constructor Create(const Range: TRange; MapTo: TNumber);
 
-		function TryMap(var vValue: TNumber): Boolean;
-		function TryMapRange(vRange: TRange; vRangesMapped, vRangesUnmapped: TRangeList): Boolean;
+		function TryMap(var Value: TNumber): Boolean;
+		function TryMapRange(Range: TRange; RangesMapped, RangesUnmapped: TRangeList): Boolean;
 	end;
 
 	TMappingList = specialize TFPGObjectList<TMapping>;
@@ -44,175 +44,175 @@ type
 		constructor Create();
 		destructor Destroy; override;
 
-		procedure AddMapping(vTo, vFrom, vLength: TNumber);
-		function MapNumber(vValue: TNumber): TNumber;
-		function MapRanges(vRange: TRange): TRangeList;
+		procedure AddMapping(MapTo, MapFrom, MapLength: TNumber);
+		function MapNumber(Value: TNumber): TNumber;
+		function MapRanges(Range: TRange): TRangeList;
 	end;
 
 	TAlmanacMapList = specialize TFPGObjectList<TAlmanacMap>;
 
 implementation
 
-procedure ParseInput(vInput: TStringList; vNumbers: TNumberList; vMaps: TAlmanacMapList);
+procedure ParseInput(InputData: TStringList; Numbers: TNumberList; Maps: TAlmanacMapList);
 var
-	vLine: String;
-	vStringPart: String;
-	vSplit: TStringArray;
-	vLastMap: TAlmanacMap;
+	LLine: String;
+	LStringPart: String;
+	LSplit: TStringArray;
+	LLastMap: TAlmanacMap;
 begin
-	for vLine in vInput do begin
-		if Length(vLine) = 0 then
+	for LLine in InputData do begin
+		if Length(LLine) = 0 then
 			continue;
 
-		if vLine.StartsWith('seeds:') then begin
-			vSplit := copy(vLine, 8).Split([' ']);
-			for vStringPart in vSplit do
-				vNumbers.Add(StrToInt64(vStringPart));
+		if LLine.StartsWith('seeds:') then begin
+			LSplit := copy(LLine, 8).Split([' ']);
+			for LStringPart in LSplit do
+				Numbers.Add(StrToInt64(LStringPart));
 		end
 
-		else if IsNumber(vLine[1]) then begin
-			vSplit := vLine.Split([' ']);
-			vLastMap.AddMapping(
-				StrToInt64(vSplit[0]),
-				StrToInt64(vSplit[1]),
-				StrToInt64(vSplit[2])
+		else if IsNumber(LLine[1]) then begin
+			LSplit := LLine.Split([' ']);
+			LLastMap.AddMapping(
+				StrToInt64(LSplit[0]),
+				StrToInt64(LSplit[1]),
+				StrToInt64(LSplit[2])
 			);
 		end
 
 		else begin
-			vLastMap := TAlmanacMap.Create;
-			vMaps.Add(vLastMap);
+			LLastMap := TAlmanacMap.Create;
+			Maps.Add(LLastMap);
 		end;
 	end;
 end;
 
-function PartOne(vNumbers: TNumberList; vMaps: TAlmanacMapList): TNumber;
+function PartOne(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
-	vNumber: TNumber;
-	vNewNumbers: TNumberList;
-	vMap: TAlmanacMap;
+	LNumber: TNumber;
+	LNewNumbers: TNumberList;
+	LMap: TAlmanacMap;
 begin
-	vNewNumbers := TNumberList.Create;
+	LNewNumbers := TNumberList.Create;
 
-	for vMap in vMaps do begin
-		for vNumber in vNumbers do
-			vNewNumbers.Add(vMap.MapNumber(vNumber));
+	for LMap in Maps do begin
+		for LNumber in Numbers do
+			LNewNumbers.Add(LMap.MapNumber(LNumber));
 
-		vNumbers.Clear;
-		vNumbers.AddList(vNewNumbers);
-		vNewNumbers.Clear;
+		Numbers.Clear;
+		Numbers.AddList(LNewNumbers);
+		LNewNumbers.Clear;
 	end;
 
-	vNewNumbers.Free;
+	LNewNumbers.Free;
 
-	result := vNumbers[0];
-	for vNumber in vNumbers do
-		result := Min(result, vNumber);
+	result := Numbers[0];
+	for LNumber in Numbers do
+		result := Min(result, LNumber);
 end;
 
-function PartTwo(vNumbers: TNumberList; vMaps: TAlmanacMapList): TNumber;
+function PartTwo(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
-	vRange: TRange;
-	vRanges: TRangeList;
-	vNewRanges: TRangeList;
-	vTmpRanges: TRangeList;
-	vInd: Integer;
-	vMap: TAlmanacMap;
+	LRange: TRange;
+	LRanges: TRangeList;
+	LNewRanges: TRangeList;
+	LTmpRanges: TRangeList;
+	LInd: Integer;
+	LMap: TAlmanacMap;
 begin
-	vRanges := TRangeList.Create;
-	vNewRanges := TRangeList.Create;
+	LRanges := TRangeList.Create;
+	LNewRanges := TRangeList.Create;
 
-	for vInd := 0 to (vNumbers.Count div 2) - 1 do begin
-		vRange.Lower := vNumbers[vInd * 2];
-		vRange.Upper := vRange.Lower + vNumbers[vInd * 2 + 1] - 1;
-		vRanges.Add(vRange);
+	for LInd := 0 to (Numbers.Count div 2) - 1 do begin
+		LRange.Lower := Numbers[LInd * 2];
+		LRange.Upper := LRange.Lower + Numbers[LInd * 2 + 1] - 1;
+		LRanges.Add(LRange);
 	end;
 
-	for vMap in vMaps do begin
-		for vRange in vRanges do begin
-			vTmpRanges := vMap.MapRanges(vRange);
-			vNewRanges.AddList(vTmpRanges);
-			vTmpRanges.Free;
+	for LMap in Maps do begin
+		for LRange in LRanges do begin
+			LTmpRanges := LMap.MapRanges(LRange);
+			LNewRanges.AddList(LTmpRanges);
+			LTmpRanges.Free;
 		end;
 
-		vRanges.Clear;
-		vRanges.AddList(vNewRanges);
-		vNewRanges.Clear;
+		LRanges.Clear;
+		LRanges.AddList(LNewRanges);
+		LNewRanges.Clear;
 	end;
 
-	vNewRanges.Free;
+	LNewRanges.Free;
 
-	result := vRanges[0].Lower;
-	for vRange in vRanges do
-		result := Min(result, vRange.Lower);
+	result := LRanges[0].Lower;
+	for LRange in LRanges do
+		result := Min(result, LRange.Lower);
 
-	vRanges.Free;
+	LRanges.Free;
 end;
 
-function RunPart(vPart: Integer; vInput: TStringList): String;
+function RunPart(Part: Integer; InputData: TStringList): String;
 var
-	vNumbers: TNumberList;
-	vMaps: TAlmanacMapList;
+	LNumbers: TNumberList;
+	LMaps: TAlmanacMapList;
 begin
-	vNumbers := TNumberList.Create;
-	vMaps := TAlmanacMapList.Create;
-	ParseInput(vInput, vNumbers, vMaps);
+	LNumbers := TNumberList.Create;
+	LMaps := TAlmanacMapList.Create;
+	ParseInput(InputData, LNumbers, LMaps);
 
-	case vPart of
-		1: result := IntToStr(PartOne(vNumbers, vMaps));
-		2: result := IntToStr(PartTwo(vNumbers, vMaps));
+	case Part of
+		1: result := IntToStr(PartOne(LNumbers, LMaps));
+		2: result := IntToStr(PartTwo(LNumbers, LMaps));
 		else
 			result := 'No such part number!';
 	end;
 
-	vNumbers.Free;
-	vMaps.Free;
+	LNumbers.Free;
+	LMaps.Free;
 end;
 
-class operator TRange.= (const vR1, vR2: TRange): Boolean;
+class operator TRange.= (const R1, R2: TRange): Boolean;
 begin
-	result := (vR1.Lower = vR2.Lower) and (vR1.Upper = vR2.Upper);
+	result := (R1.Lower = R2.Lower) and (R1.Upper = R2.Upper);
 end;
 
-constructor TMapping.Create(const vRange: TRange; vTo: TNumber);
+constructor TMapping.Create(const Range: TRange; MapTo: TNumber);
 begin
-	FRangeFrom := vRange;
-	FBaseTo := vTo;
+	FRangeFrom := Range;
+	FBaseTo := MapTo;
 end;
 
-function TMapping.TryMap(var vValue: TNumber): Boolean;
+function TMapping.TryMap(var Value: TNumber): Boolean;
 begin
-	result := (vValue >= FRangeFrom.Lower) and (vValue <= FRangeFrom.Upper);
+	result := (Value >= FRangeFrom.Lower) and (Value <= FRangeFrom.Upper);
 	if result then
-		vValue := FBaseTo + (vValue - FRangeFrom.Lower);
+		Value := FBaseTo + (Value - FRangeFrom.Lower);
 end;
 
-function TMapping.TryMapRange(vRange: TRange; vRangesMapped, vRangesUnmapped: TRangeList): Boolean;
+function TMapping.TryMapRange(Range: TRange; RangesMapped, RangesUnmapped: TRangeList): Boolean;
 var
-	vNewRange: TRange;
+	LNewRange: TRange;
 begin
-	result := (vRange.Lower <= FRangeFrom.Upper) and (vRange.Upper >= FRangeFrom.Lower);
+	result := (Range.Lower <= FRangeFrom.Upper) and (Range.Upper >= FRangeFrom.Lower);
 	if not result then exit;
 
-	if vRange.Lower < FRangeFrom.Lower then begin
-		vNewRange.Lower := vRange.Lower;
-		vNewRange.Upper := FRangeFrom.Lower - 1;
-		vRangesUnmapped.Add(vNewRange);
+	if Range.Lower < FRangeFrom.Lower then begin
+		LNewRange.Lower := Range.Lower;
+		LNewRange.Upper := FRangeFrom.Lower - 1;
+		RangesUnmapped.Add(LNewRange);
 
-		vRange.Lower := FRangeFrom.Lower;
+		Range.Lower := FRangeFrom.Lower;
 	end;
 
-	if vRange.Upper > FRangeFrom.Upper then begin
-		vNewRange.Upper := vRange.Upper;
-		vNewRange.Lower := FRangeFrom.Upper + 1;
-		vRangesUnmapped.Add(vNewRange);
+	if Range.Upper > FRangeFrom.Upper then begin
+		LNewRange.Upper := Range.Upper;
+		LNewRange.Lower := FRangeFrom.Upper + 1;
+		RangesUnmapped.Add(LNewRange);
 
-		vRange.Upper := FRangeFrom.Upper;
+		Range.Upper := FRangeFrom.Upper;
 	end;
 
-	vNewRange.Lower := FBaseTo + (vRange.Lower - FRangeFrom.Lower);
-	vNewRange.Upper := FBaseTo + (vRange.Upper - FRangeFrom.Lower);
-	vRangesMapped.Add(vNewRange);
+	LNewRange.Lower := FBaseTo + (Range.Lower - FRangeFrom.Lower);
+	LNewRange.Upper := FBaseTo + (Range.Upper - FRangeFrom.Lower);
+	RangesMapped.Add(LNewRange);
 end;
 
 constructor TAlmanacMap.Create();
@@ -225,51 +225,52 @@ begin
 	FMappings.Free;
 end;
 
-procedure TAlmanacMap.AddMapping(vTo, vFrom, vLength: TNumber);
+procedure TAlmanacMap.AddMapping(MapTo, MapFrom, MapLength: TNumber);
 var
-	vRange: TRange;
+	LRange: TRange;
 begin
-	vRange.Lower := vFrom;
-	vRange.Upper := vFrom + vLength - 1;
+	LRange.Lower := MapFrom;
+	LRange.Upper := MapFrom + MapLength - 1;
 
-	FMappings.Add(TMapping.Create(vRange, vTo));
+	FMappings.Add(TMapping.Create(LRange, MapTo));
 end;
 
-function TAlmanacMap.MapNumber(vValue: TNumber): TNumber;
+function TAlmanacMap.MapNumber(Value: TNumber): TNumber;
 var
-	vMapping: TMapping;
+	LMapping: TMapping;
 begin
-	result := vValue;
-	for vMapping in FMappings do begin
-		if vMapping.TryMap(result) then exit;
+	result := Value;
+	for LMapping in FMappings do begin
+		if LMapping.TryMap(result) then exit;
 	end;
 end;
 
-function TAlmanacMap.MapRanges(vRange: TRange): TRangeList;
+function TAlmanacMap.MapRanges(Range: TRange): TRangeList;
 var
-	vMapping: TMapping;
-	vRanges: TRangeList;
-	vNewRanges: TRangeList;
+	LMapping: TMapping;
+	LRange: TRange;
+	LRanges: TRangeList;
+	LNewRanges: TRangeList;
 begin
 	result := TRangeList.Create;
-	vRanges := TRangeList.Create;
-	vNewRanges := TRangeList.Create;
-	vRanges.Add(vRange);
+	LRanges := TRangeList.Create;
+	LNewRanges := TRangeList.Create;
+	LRanges.Add(Range);
 
-	for vMapping in FMappings do begin
-		for vRange in vRanges do begin
-			if not vMapping.TryMapRange(vRange, result, vNewRanges) then
-				vNewRanges.Add(vRange);
+	for LMapping in FMappings do begin
+		for LRange in LRanges do begin
+			if not LMapping.TryMapRange(LRange, result, LNewRanges) then
+				LNewRanges.Add(LRange);
 		end;
 
-		vRanges.Clear;
-		vRanges.AddList(vNewRanges);
-		vNewRanges.Clear;
+		LRanges.Clear;
+		LRanges.AddList(LNewRanges);
+		LNewRanges.Clear;
 	end;
 
-	result.AddList(vRanges);
-	vRanges.Free;
-	vNewRanges.Free;
+	result.AddList(LRanges);
+	LRanges.Free;
+	LNewRanges.Free;
 end;
 
 end.
