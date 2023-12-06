@@ -1,4 +1,6 @@
 .carmel
 local
 .session
+input/*
+!input/.gitkeep
 
