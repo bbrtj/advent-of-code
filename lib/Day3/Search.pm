@@ -12,8 +12,8 @@ has field 'coords' => (
 
 sub add ($self, $item, $pos_x, $pos_y, $length)
 {
-	$self->coords->[$pos_y][$_] = \$item
-		for $pos_x .. $pos_x + $length - 1;
+	$self->coords->[$pos_y]->@[$pos_x .. $pos_x + $length - 1]
+		= (\$item) x $length;
 }
 
 sub find_around ($self, $pos_x, $pos_y)
@@ -25,8 +25,7 @@ sub find_around ($self, $pos_x, $pos_y)
 	my @found;
 	foreach my $x ($from_x .. $pos_x + 1) {
 		foreach my $y ($from_y .. $pos_y + 1) {
-			my $content = $coords->[$y][$x];
-			push @found, $content if $content;
+			push @found, $coords->[$y][$x] // ();
 		}
 	}
 
