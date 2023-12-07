@@ -6,7 +6,6 @@ use Term::ANSIColor;
 use builtin qw(trim);
 
 use class -role;
-no warnings qw(experimental::builtin);
 
 has field '_running_part' => (
 	isa => Tuple[PositiveInt, PositiveInt],

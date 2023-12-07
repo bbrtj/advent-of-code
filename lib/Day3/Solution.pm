@@ -5,7 +5,6 @@ use List::Util qw(max sum0 product);
 use builtin qw(ceil indexed);
 
 use class;
-no warnings qw(experimental::builtin);
 
 with 'Solution';
 
