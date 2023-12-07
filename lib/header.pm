@@ -26,6 +26,9 @@ sub import ($me, @args)
 	warnings->unimport::out_of($pkg, 'experimental::defer');
 	warnings->unimport::out_of($pkg, 'experimental::for_list');
 
+	# not exported, but don't warn about builtin
+	warnings->unimport::out_of($pkg, 'experimental::builtin');
+
 	return;
 }
 
