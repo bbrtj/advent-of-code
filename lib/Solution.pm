@@ -7,7 +7,6 @@ use builtin qw(trim);
 use Util;
 
 use class -role;
-no warnings qw(experimental::builtin);
 
 use constant YEAR => '????';
 

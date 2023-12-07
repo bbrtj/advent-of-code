@@ -4,7 +4,6 @@ use List::Util qw(reduce);
 use builtin qw(ceil indexed);
 
 use class;
-no warnings qw(experimental::builtin);
 
 with 'Solution';
 
