@@ -22,8 +22,8 @@ sub get_set_value ($self, $set, $use_jokers)
 {
 	state @cards_normal = qw(A K Q J T 9 8 7 6 5 4 3 2);
 	state @cards_jokers = qw(A K Q T 9 8 7 6 5 4 3 2 J);
-	state %cards_map_normal = map { $cards_normal[$_] => @cards_normal - $_ } keys @cards_normal;
-	state %cards_map_jokers = map { $cards_jokers[$_] => @cards_jokers - $_ } keys @cards_jokers;
+	state %cards_map_normal = map { $cards_normal[$_] => $#cards_normal - $_ } keys @cards_normal;
+	state %cards_map_jokers = map { $cards_jokers[$_] => $#cards_jokers - $_ } keys @cards_jokers;
 	state $cards_in_set = 5;
 
 	# work out the basics
@@ -35,8 +35,8 @@ sub get_set_value ($self, $set, $use_jokers)
 	my $cards_value = 0;
 	foreach my ($index, $card) (indexed $set->@*) {
 		$card_types{$card}++;
-		my $power = ($cards_in_set - $index - 1);
-		$cards_value += $cards_map->{$card} * (($cards_count + 1) ** $power);
+		my $power = $cards_in_set - $index - 1;
+		$cards_value += $cards_map->{$card} * ($cards_count ** $power);
 	}
 
 	# these subs will match a set, their index is a set value
@@ -66,7 +66,9 @@ sub get_set_value ($self, $set, $use_jokers)
 		}
 	}
 
-	return [$set_value, $cards_value];
+	# cards cannot get higher value than $high_value, so multiply set by that
+	my $high_value = $cards_count ** $cards_in_set;
+	return $set_value * $high_value + $cards_value;
 }
 
 sub sort_sets ($self, $input, $use_jokers)
@@ -80,11 +82,7 @@ sub sort_sets ($self, $input, $use_jokers)
 
 	return [
 		sort {
-			# by set
-			$a->[0][0] <=> $b->[0][0]
-			||
-			# by cards
-			$a->[0][1] <=> $b->[0][1]
+			$a->[0] <=> $b->[0]
 		} @valued_sets
 	];
 }
