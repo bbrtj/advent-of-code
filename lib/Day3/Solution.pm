@@ -1,8 +1,8 @@
 package Day3::Solution;
 
 use Day3::Search;
-use List::Util qw(max sum0 product);
-use builtin qw(ceil indexed);
+use List::Util qw(sum0 product);
+use builtin qw(indexed);
 
 use class;
 
