@@ -8,43 +8,31 @@ use class;
 
 with 'Solution';
 
-sub _parse_input ($self, $input)
+sub _parse_input ($self, $input = $self->input)
 {
-	# new reference - do not break input
-	$input = [map { [split //, $_] } $input->@*];
-
 	my $search = Day3::Search->new;
 	my @symbols;
 
-	my sub save_number ($from_x, $to_x, $y)
-	{
-		my $number = join '', $input->[$y]->@[$from_x .. $to_x];
-		$search->add($number, $from_x, $y, length $number);
-	}
+	foreach my ($pos_y, $line) (indexed $input->@*) {
+		my $pos_x = 0;
+		my @items = split m{ ( \.+ | \D ) }x, $line;
 
-	my $number_from = undef;
-	foreach my ($pos_y, $items_x) (indexed $input->@*) {
-		foreach my ($pos_x, $item) (indexed $items_x->@*) {
-			my $has_number = $item =~ /\d/;
+		my $is_number = !!0;
+		foreach my $item (@items) {
+			$is_number = !$is_number;
 
-			if (!defined $number_from && $has_number) {
-				# number start
-				$number_from = $pos_x;
+			my $len = length $item;
+			next if $len == 0;
+
+			if ($is_number) {
+				$search->add($item, $pos_x, $pos_y, $len);
 			}
-			elsif (defined $number_from && !$has_number) {
-				# number end
-				save_number($number_from, $pos_x - 1, $pos_y);
-				$number_from = undef;
-			}
-
-			if (!$has_number) {
-				next if $item eq '.';
+			elsif ($len == 1 && $item ne '.') {
 				push @symbols, [$item, $pos_x, $pos_y];
 			}
-		}
 
-		save_number($number_from, $input->[$pos_y]->$#*, $pos_y)
-			if defined $number_from;
+			$pos_x += $len;
+		}
 	}
 
 	return ($search, \@symbols);
@@ -52,12 +40,11 @@ sub _parse_input ($self, $input)
 
 sub part_1 ($self)
 {
-	my ($search, $symbols) = $self->_parse_input($self->input);
+	my ($search, $symbols) = $self->_parse_input;
 
 	my $sum = 0;
 	foreach my $symbol ($symbols->@*) {
-		shift $symbol->@*;
-		$sum += sum0 $search->find_around($symbol->@*)->@*;
+		$sum += sum0 $search->find_around($symbol->@[1, 2])->@*;
 	}
 
 	return $sum;
@@ -65,14 +52,13 @@ sub part_1 ($self)
 
 sub part_2 ($self)
 {
-	my ($search, $symbols) = $self->_parse_input($self->input);
+	my ($search, $symbols) = $self->_parse_input;
 
 	my $sum = 0;
 	foreach my $symbol ($symbols->@*) {
-		my $type = shift $symbol->@*;
-		next unless $type eq '*';
+		next unless $symbol->[0] eq '*';
 
-		my @found = $search->find_around($symbol->@*)->@*;
+		my @found = $search->find_around($symbol->@[1, 2])->@*;
 		next unless @found == 2;
 
 		$sum += product @found;
