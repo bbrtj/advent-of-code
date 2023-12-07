@@ -10,7 +10,7 @@ with 'Solution';
 sub _parse_input ($self, $input = $self->input)
 {
 	my @data;
-	foreach my $line ($self->input->@*) {
+	foreach my $line ($input->@*) {
 		my ($cards, $value) = split / /, $line;
 		push @data, [[split //, $cards], $value];
 	}
