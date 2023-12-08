@@ -1,6 +1,5 @@
 package Day8::Solution;
 
-use Q::S::L qw(superpos fetch_matches);
 use Math::BigInt try => 'GMP';
 
 use class;
@@ -49,12 +48,12 @@ sub part_1 ($self)
 sub part_2 ($self)
 {
 	my ($instruction, $map) = $self->_parse_input;
-	my $all_starting = fetch_matches { superpos([keys $map->%*])->compare(sub { $_[0] =~ /A$/ }) };
+	my @all_starting = grep { /A$/ } keys $map->%*;
 
 	my $lcm = Math::BigInt->new(1);
-	foreach my $starting ($all_starting->states->@*) {
+	foreach my $starting (@all_starting) {
 		$lcm = $lcm->blcm(
-			$self->get_number_of_cycles($instruction, $map, $starting->value, qr/Z$/)
+			$self->get_number_of_cycles($instruction, $map, $starting, qr/Z$/)
 		);
 	}
 
