@@ -6,6 +6,7 @@ requires 'Type::Tiny';
 requires 'namespace::autoclean';
 
 requires 'Lingua::EN::Numbers';
+requires 'Math::Utils';
 
 # may uncomment for speed
 # requires 'MooX::XSConstructor';

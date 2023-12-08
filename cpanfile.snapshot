@@ -72,6 +72,14 @@ DISTRIBUTIONS
       strict 0
       vars 0
       warnings 0
+  Math-Utils-1.14
+    pathname: J/JG/JGAMBLE/Math-Utils-1.14.tar.gz
+    provides:
+      Math::Utils 1.14
+    requirements:
+      Module::Build 0.4
+      Test::More 0
+      perl v5.10.1
   Module-Build-0.4234
     pathname: L/LE/LEONT/Module-Build-0.4234.tar.gz
     provides:
