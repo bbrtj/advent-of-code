@@ -1,6 +1,6 @@
 package Day8::Solution;
 
-use Math::BigInt try => 'GMP';
+use Math::Utils qw(lcm);
 
 use class;
 
@@ -50,13 +50,11 @@ sub part_2 ($self)
 	my ($instruction, $map) = $self->_parse_input;
 	my @all_starting = grep { /A$/ } keys $map->%*;
 
-	my $lcm = Math::BigInt->new(1);
+	my @cycles;
 	foreach my $starting (@all_starting) {
-		$lcm = $lcm->blcm(
-			$self->get_number_of_cycles($instruction, $map, $starting, qr/Z$/)
-		);
+		push @cycles, $self->get_number_of_cycles($instruction, $map, $starting, qr/Z$/);
 	}
 
-	return $lcm;
+	return lcm(@cycles);
 }
 
