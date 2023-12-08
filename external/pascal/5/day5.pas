@@ -1,25 +1,46 @@
 unit Day5;
 
 {$mode objfpc}{$H+}{$J-}
-{$modeswitch advancedrecords}
 
 interface
 
-uses SysUtils, Classes, FGL, Math, Character;
+uses SysUtils, Classes, FGL, Math;
 
 function RunPart(Part: Integer; InputData: TStringList): String;
 
 type
 	TNumber = Int64;
 
-	TRange = record
+	TRange = class
 		Lower: TNumber;
 		Upper: TNumber;
 
-		class operator = (const R1, R2: TRange): Boolean;
+		constructor Create(const aLower, aUpper: TNumber);
 	end;
 
-	TRangeList = specialize TFPGList<TRange>;
+	generic TCustomList<T> = class
+	private
+		type
+			TRangeArray = array of T;
+		var
+			FLength: Integer;
+
+		procedure AdjustLength(NewLength: Integer);
+
+	public
+		Items: TRangeArray;
+		Count: Integer;
+		FreeObjects: Boolean;
+
+		constructor Create(aFreeObjects: Boolean = True);
+		destructor Destroy; override;
+
+		procedure Add(Item: T);
+		procedure AddList(Other: TCustomList);
+		procedure Clear();
+	end;
+
+	TRangeList = specialize TCustomList<TRange>;
 
 	TMapping = class
 	strict private
@@ -27,7 +48,8 @@ type
 		FBaseTo: TNumber;
 
 	public
-		constructor Create(const Range: TRange; MapTo: TNumber);
+		constructor Create(aLower, aUpper, MapTo: TNumber);
+		destructor Destroy; override;
 
 		function TryMap(var Value: TNumber): Boolean;
 		function TryMapRange(Range: TRange; RangesMapped, RangesUnmapped: TRangeList): Boolean;
@@ -46,138 +68,196 @@ type
 
 		procedure AddMapping(MapTo, MapFrom, MapLength: TNumber);
 		function MapNumber(Value: TNumber): TNumber;
-		function MapRanges(Range: TRange): TRangeList;
+		procedure MapRanges(Range: TRange; RangeList: TRangeList);
 	end;
 
 	TAlmanacMapList = specialize TFPGObjectList<TAlmanacMap>;
 
 implementation
 
-procedure ParseInput(InputData: TStringList; Numbers: TNumberList; Maps: TAlmanacMapList);
+procedure ParseInput(InputData: TStringList; var Numbers: TNumberList; var Maps: TAlmanacMapList);
 var
-	LLine: String;
-	LStringPart: String;
-	LSplit: TStringArray;
-	LLastMap: TAlmanacMap;
+	lLine: String;
+	lSplit: TStringArray;
+	lLastMap: TAlmanacMap;
+	i: Integer;
 begin
-	for LLine in InputData do begin
-		if Length(LLine) = 0 then
+	for lLine in InputData do begin
+		if Length(lLine) = 0 then
 			continue;
 
-		if LLine.StartsWith('seeds:') then begin
-			LSplit := copy(LLine, 8).Split([' ']);
-			for LStringPart in LSplit do
-				Numbers.Add(StrToInt64(LStringPart));
+		if lLine.StartsWith('seeds:') then begin
+			lSplit := copy(lLine, 8).Split([' ']);
+			for i := Low(lSplit) to High(lSplit) do
+				Numbers.Add(StrToInt64(lSplit[i]));
 		end
 
-		else if IsNumber(LLine[1]) then begin
-			LSplit := LLine.Split([' ']);
-			LLastMap.AddMapping(
-				StrToInt64(LSplit[0]),
-				StrToInt64(LSplit[1]),
-				StrToInt64(LSplit[2])
+		else if lLine[1] in ['0' .. '9'] then begin
+			lSplit := lLine.Split([' ']);
+			lLastMap.AddMapping(
+				StrToInt64(lSplit[0]),
+				StrToInt64(lSplit[1]),
+				StrToInt64(lSplit[2])
 			);
 		end
 
 		else begin
-			LLastMap := TAlmanacMap.Create;
-			Maps.Add(LLastMap);
+			lLastMap := TAlmanacMap.Create;
+			Maps.Add(lLastMap);
 		end;
 	end;
 end;
 
 function PartOne(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
-	LNumber: TNumber;
-	LNewNumbers: TNumberList;
-	LMap: TAlmanacMap;
+	lNumbers: TNumberList;
+	lNewNumbers: TNumberList;
+	i, j: Integer;
 begin
-	LNewNumbers := TNumberList.Create;
+	lNumbers := TNumberList.Create;
+	lNewNumbers := TNumberList.Create;
 
-	for LMap in Maps do begin
-		for LNumber in Numbers do
-			LNewNumbers.Add(LMap.MapNumber(LNumber));
+	lNumbers.AddList(Numbers);
 
-		Numbers.Clear;
-		Numbers.AddList(LNewNumbers);
-		LNewNumbers.Clear;
+	for i := 0 to Maps.Count - 1 do begin
+		for j := 0 to lNumbers.Count - 1 do
+			lNewNumbers.Add(Maps[i].MapNumber(lNumbers[j]));
+
+		lNumbers.Clear;
+		lNumbers.AddList(lNewNumbers);
+		lNewNumbers.Clear;
 	end;
 
-	LNewNumbers.Free;
+	lNewNumbers.Free;
 
-	result := Numbers[0];
-	for LNumber in Numbers do
-		result := Min(result, LNumber);
+	result := lNumbers[0];
+	for i := 0 to lNumbers.Count - 1 do
+		result := Min(result, lNumbers[i]);
+
+	lNumbers.Free;
 end;
 
 function PartTwo(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
-	LRange: TRange;
-	LRanges: TRangeList;
-	LNewRanges: TRangeList;
-	LTmpRanges: TRangeList;
-	LInd: Integer;
-	LMap: TAlmanacMap;
-begin
-	LRanges := TRangeList.Create;
-	LNewRanges := TRangeList.Create;
+	lRanges: TRangeList;
+	lNewRanges: TRangeList;
+	i, j: Integer;
 
-	for LInd := 0 to (Numbers.Count div 2) - 1 do begin
-		LRange.Lower := Numbers[LInd * 2];
-		LRange.Upper := LRange.Lower + Numbers[LInd * 2 + 1] - 1;
-		LRanges.Add(LRange);
+begin
+	lRanges := TRangeList.Create(False);
+	lNewRanges := TRangeList.Create(False);
+
+	for i := 0 to (Numbers.Count div 2) - 1 do begin
+		lRanges.Add(TRange.Create(
+			Numbers[i * 2],
+			Numbers[i * 2] + Numbers[i * 2 + 1] - 1)
+		);
 	end;
 
-	for LMap in Maps do begin
-		for LRange in LRanges do begin
-			LTmpRanges := LMap.MapRanges(LRange);
-			LNewRanges.AddList(LTmpRanges);
-			LTmpRanges.Free;
+	for i := 0 to Maps.Count - 1 do begin
+		for j := 0 to lRanges.Count - 1 do begin
+			Maps[i].MapRanges(lRanges.Items[j], lNewRanges);
 		end;
 
-		LRanges.Clear;
-		LRanges.AddList(LNewRanges);
-		LNewRanges.Clear;
+		lRanges.Clear;
+		lRanges.AddList(lNewRanges);
+		lNewRanges.Clear;
 	end;
 
-	LNewRanges.Free;
+	lNewRanges.Free;
 
-	result := LRanges[0].Lower;
-	for LRange in LRanges do
-		result := Min(result, LRange.Lower);
+	result := lRanges.Items[0].Lower;
+	for i := 0 to lRanges.Count - 1 do
+		result := Min(result, lRanges.Items[i].Lower);
 
-	LRanges.Free;
+	lRanges.FreeObjects := True;
+	lRanges.Free;
 end;
 
 function RunPart(Part: Integer; InputData: TStringList): String;
 var
-	LNumbers: TNumberList;
-	LMaps: TAlmanacMapList;
+	lNumbers: TNumberList;
+	lMaps: TAlmanacMapList;
 begin
-	LNumbers := TNumberList.Create;
-	LMaps := TAlmanacMapList.Create;
-	ParseInput(InputData, LNumbers, LMaps);
+	lNumbers := TNumberList.Create;
+	lMaps := TAlmanacMapList.Create;
+	ParseInput(InputData, lNumbers, lMaps);
 
 	case Part of
-		1: result := IntToStr(PartOne(LNumbers, LMaps));
-		2: result := IntToStr(PartTwo(LNumbers, LMaps));
+		1: result := IntToStr(PartOne(lNumbers, lMaps));
+		2: result := IntToStr(PartTwo(lNumbers, lMaps));
 		else
 			result := 'No such part number!';
 	end;
 
-	LNumbers.Free;
-	LMaps.Free;
+	lNumbers.Free;
+	lMaps.Free;
 end;
 
-class operator TRange.= (const R1, R2: TRange): Boolean;
+constructor TRange.Create(const aLower, aUpper: TNumber);
 begin
-	result := (R1.Lower = R2.Lower) and (R1.Upper = R2.Upper);
+	self.Lower := aLower;
+	self.Upper := aUpper;
 end;
 
-constructor TMapping.Create(const Range: TRange; MapTo: TNumber);
+constructor TCustomList.Create(aFreeObjects: Boolean = True);
 begin
-	FRangeFrom := Range;
+	self.AdjustLength(2);
+	self.FreeObjects := aFreeObjects;
+	self.Count := 0;
+end;
+
+destructor TCustomList.Destroy;
+begin
+	self.Clear;
+end;
+
+procedure TCustomList.AdjustLength(NewLength: Integer);
+begin
+	FLength := NewLength;
+	SetLength(self.Items, NewLength);
+end;
+
+procedure TCustomList.Add(Item: T);
+begin
+	self.Items[self.Count] := Item;
+
+	Inc(self.Count);
+	if self.Count = FLength then
+		AdjustLength(FLength * 2);
+end;
+
+procedure TCustomList.AddList(Other: TCustomList);
+var
+	i: Integer;
+begin
+	for i := 0 to Other.Count - 1 do
+		self.Add(Other.Items[i]);
+end;
+
+procedure TCustomList.Clear();
+var
+	i: Integer;
+begin
+	if self.FreeObjects then begin
+		for i := self.Count - 1 downto 0 do
+			self.Items[i].Free;
+	end;
+
+	self.Count := 0;
+end;
+
+
+constructor TMapping.Create(aLower, aUpper, MapTo: TNumber);
+begin
+	FRangeFrom := TRange.Create(aLower, aUpper);
 	FBaseTo := MapTo;
+end;
+
+destructor TMapping.Destroy;
+begin
+	FRangeFrom.Free;
+	inherited;
 end;
 
 function TMapping.TryMap(var Value: TNumber): Boolean;
@@ -188,31 +268,25 @@ begin
 end;
 
 function TMapping.TryMapRange(Range: TRange; RangesMapped, RangesUnmapped: TRangeList): Boolean;
-var
-	LNewRange: TRange;
 begin
 	result := (Range.Lower <= FRangeFrom.Upper) and (Range.Upper >= FRangeFrom.Lower);
 	if not result then exit;
 
 	if Range.Lower < FRangeFrom.Lower then begin
-		LNewRange.Lower := Range.Lower;
-		LNewRange.Upper := FRangeFrom.Lower - 1;
-		RangesUnmapped.Add(LNewRange);
+		RangesUnmapped.Add(TRange.Create(Range.Lower, FRangeFrom.Lower - 1));
 
 		Range.Lower := FRangeFrom.Lower;
 	end;
 
 	if Range.Upper > FRangeFrom.Upper then begin
-		LNewRange.Upper := Range.Upper;
-		LNewRange.Lower := FRangeFrom.Upper + 1;
-		RangesUnmapped.Add(LNewRange);
+		RangesUnmapped.Add(TRange.Create(FRangeFrom.Upper + 1, Range.Upper));
 
 		Range.Upper := FRangeFrom.Upper;
 	end;
 
-	LNewRange.Lower := FBaseTo + (Range.Lower - FRangeFrom.Lower);
-	LNewRange.Upper := FBaseTo + (Range.Upper - FRangeFrom.Lower);
-	RangesMapped.Add(LNewRange);
+	Range.Lower := FBaseTo + (Range.Lower - FRangeFrom.Lower);
+	Range.Upper := FBaseTo + (Range.Upper - FRangeFrom.Lower);
+	RangesMapped.Add(Range);
 end;
 
 constructor TAlmanacMap.Create();
@@ -226,51 +300,44 @@ begin
 end;
 
 procedure TAlmanacMap.AddMapping(MapTo, MapFrom, MapLength: TNumber);
-var
-	LRange: TRange;
 begin
-	LRange.Lower := MapFrom;
-	LRange.Upper := MapFrom + MapLength - 1;
-
-	FMappings.Add(TMapping.Create(LRange, MapTo));
+	FMappings.Add(TMapping.Create(MapFrom, MapFrom + MapLength - 1, MapTo));
 end;
 
 function TAlmanacMap.MapNumber(Value: TNumber): TNumber;
 var
-	LMapping: TMapping;
+	i: Integer;
 begin
 	result := Value;
-	for LMapping in FMappings do begin
-		if LMapping.TryMap(result) then exit;
+	for i := 0 to FMappings.Count - 1 do begin
+		if FMappings[i].TryMap(result) then exit;
 	end;
 end;
 
-function TAlmanacMap.MapRanges(Range: TRange): TRangeList;
+procedure TAlmanacMap.MapRanges(Range: TRange; RangeList: TRangeList);
 var
-	LMapping: TMapping;
-	LRange: TRange;
-	LRanges: TRangeList;
-	LNewRanges: TRangeList;
+	lRanges: TRangeList;
+	lNewRanges: TRangeList;
+	i, j: Integer;
 begin
-	result := TRangeList.Create;
-	LRanges := TRangeList.Create;
-	LNewRanges := TRangeList.Create;
-	LRanges.Add(Range);
+	lRanges := TRangeList.Create(False);
+	lNewRanges := TRangeList.Create(False);
+	lRanges.Add(Range);
 
-	for LMapping in FMappings do begin
-		for LRange in LRanges do begin
-			if not LMapping.TryMapRange(LRange, result, LNewRanges) then
-				LNewRanges.Add(LRange);
+	for i := 0 to FMappings.Count - 1 do begin
+		for j := 0 to lRanges.Count - 1 do begin
+			if not FMappings[i].TryMapRange(lRanges.Items[j], RangeList, lNewRanges) then
+				lNewRanges.Add(lRanges.Items[j]);
 		end;
 
-		LRanges.Clear;
-		LRanges.AddList(LNewRanges);
-		LNewRanges.Clear;
+		lRanges.Clear;
+		lRanges.AddList(lNewRanges);
+		lNewRanges.Clear;
 	end;
 
-	result.AddList(LRanges);
-	LRanges.Free;
-	LNewRanges.Free;
+	RangeList.AddList(lRanges);
+	lRanges.Free;
+	lNewRanges.Free;
 end;
 
 end.
