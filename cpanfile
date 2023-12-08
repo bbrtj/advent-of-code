@@ -6,5 +6,4 @@ requires 'Type::Tiny';
 requires 'namespace::autoclean';
 
 requires 'Lingua::EN::Numbers';
-requires 'Q::S::L';
 
