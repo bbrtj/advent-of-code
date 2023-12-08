@@ -202,6 +202,36 @@ DISTRIBUTIONS
       perl 5.008001
       strict 0
       warnings 0
+  Quantum-Superpositions-Lazy-1.12
+    pathname: B/BR/BRTASTIC/Quantum-Superpositions-Lazy-1.12.tar.gz
+    provides:
+      Q::S::L 1.12
+      Quantum::Superpositions::Lazy 1.12
+      Quantum::Superpositions::Lazy::Computation 1.12
+      Quantum::Superpositions::Lazy::ComputedState 1.12
+      Quantum::Superpositions::Lazy::Operation::Computational 1.12
+      Quantum::Superpositions::Lazy::Operation::Logical 1.12
+      Quantum::Superpositions::Lazy::Role::Collapsible 1.12
+      Quantum::Superpositions::Lazy::Role::Operation 1.12
+      Quantum::Superpositions::Lazy::State 1.12
+      Quantum::Superpositions::Lazy::Statistics 1.12
+      Quantum::Superpositions::Lazy::Superposition 1.12
+      Quantum::Superpositions::Lazy::Util 1.12
+    requirements:
+      ExtUtils::MakeMaker 0
+      Moo 2.000000
+      Random::Any 0
+      Sort::Key 0
+      Type::Tiny 1.002000
+      namespace::clean 0
+      perl 5.024
+  Random-Any-0.004
+    pathname: P/PE/PERLANCAR/Random-Any-0.004.tar.gz
+    provides:
+      Random::Any 0.004
+    requirements:
+      ExtUtils::MakeMaker 0
+      strict 0
   Ref-Util-0.204
     pathname: A/AR/ARC/Ref-Util-0.204.tar.gz
     provides:
@@ -230,6 +260,18 @@ DISTRIBUTIONS
     requirements:
       Exporter 5.57
       perl 5.006
+  Sort-Key-1.33
+    pathname: S/SA/SALVA/Sort-Key-1.33.tar.gz
+    provides:
+      Sort::Key 1.33
+      Sort::Key::Maker 0.02
+      Sort::Key::Multi 1.30
+      Sort::Key::Natural 0.04
+      Sort::Key::Register 1.30
+      Sort::Key::Types 1.30
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::More 0.54
   Sub-Exporter-Progressive-0.001013
     pathname: F/FR/FREW/Sub-Exporter-Progressive-0.001013.tar.gz
     provides:
