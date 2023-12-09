@@ -7,7 +7,7 @@ use builtin qw(trim);
 
 use class -role;
 
-use constant YEAR => '????';
+use constant YEAR => '2023';
 
 has param 'language' => (
 	isa => Str,
