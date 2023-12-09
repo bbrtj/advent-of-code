@@ -8,10 +8,6 @@ use class;
 
 with 'Solution';
 
-has param 'language' => (
-	isa => Str,
-);
-
 has param 'day' => (
 	isa => PositiveInt,
 );

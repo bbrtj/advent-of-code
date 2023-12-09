@@ -8,6 +8,13 @@ use builtin qw(trim);
 use class -role;
 no warnings qw(experimental::builtin);
 
+use constant YEAR => '????';
+
+has param 'language' => (
+	isa => Str,
+	default => 'perl',
+);
+
 has field '_running_part' => (
 	isa => Tuple[PositiveInt, PositiveInt],
 	writer => 1,
@@ -50,8 +57,10 @@ sub _init_part ($self, $part)
 sub _print_greeting ($self)
 {
 	my ($day, $part) = $self->_running_part->@*;
+	my $lang = ucfirst lc $self->language;
 
-	say colored("Advent of Code [$day/$part]", 'white');
+	say colored('Advent of Code ' . YEAR, 'white');
+	say colored("Day $day part $part - $lang", 'white');
 }
 
 sub _print_test_results ($self, $test_result)
