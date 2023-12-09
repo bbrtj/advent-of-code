@@ -4,7 +4,7 @@ unit Day5;
 
 interface
 
-uses SysUtils, Classes, FGL, Math;
+uses SysUtils, Classes, Math;
 
 function RunPart(Part: Integer; InputData: TStringList): String;
 
@@ -26,26 +26,35 @@ type
 		FLength: Integer;
 		FCount: Integer;
 		FItems: TRangeArray;
-		FFreeObjects: Boolean;
 
 		procedure AdjustLength(NewLength: Integer); inline;
 		function GetItem(Index: Integer): T; inline;
 		procedure SetItem(Index: Integer; Value: T); inline;
 
 	public
-		constructor Create(aFreeObjects: Boolean = True);
+		constructor Create();
 		destructor Destroy; override;
 
 		procedure Add(Item: T); inline;
 		procedure AddList(Other: TCustomList); inline;
-		procedure Clear(); inline;
+		procedure Clear(); virtual;
 
-		property FreeObjects: Boolean read FFreeObjects write FFreeObjects;
 		property Count: Integer read FCount;
 		property Items[Index: Integer]: T read GetItem write SetItem; default;
 	end;
 
-	TRangeList = specialize TCustomList<TRange>;
+	generic TCustomObjectList<T> = class(specialize TCustomList<T>)
+	private
+		FFreeObjects: Boolean;
+
+	public
+		constructor Create(aFreeObjects: Boolean = True);
+		procedure Clear(); override;
+
+		property FreeObjects: Boolean read FFreeObjects write FFreeObjects;
+	end;
+
+	TRangeList = specialize TCustomObjectList<TRange>;
 
 	TMapping = class
 	strict private
@@ -60,8 +69,8 @@ type
 		function TryMapRange(Range: TRange; RangesMapped, RangesUnmapped: TRangeList): Boolean;
 	end;
 
-	TMappingList = specialize TFPGObjectList<TMapping>;
-	TNumberList = specialize TFPGList<TNumber>;
+	TMappingList = specialize TCustomObjectList<TMapping>;
+	TNumberList = specialize TCustomList<TNumber>;
 
 	TAlmanacMap = class
 	strict private
@@ -76,7 +85,7 @@ type
 		procedure MapRanges(Range: TRange; RangeList: TRangeList);
 	end;
 
-	TAlmanacMapList = specialize TFPGObjectList<TAlmanacMap>;
+	TAlmanacMapList = specialize TCustomObjectList<TAlmanacMap>;
 
 implementation
 
@@ -205,16 +214,16 @@ begin
 	self.Upper := aUpper;
 end;
 
-constructor TCustomList.Create(aFreeObjects: Boolean = True);
+constructor TCustomList.Create();
 begin
 	self.AdjustLength(2);
-	FFreeObjects := aFreeObjects;
 	FCount := 0;
 end;
 
 destructor TCustomList.Destroy;
 begin
 	self.Clear;
+	inherited;
 end;
 
 function TCustomList.GetItem(Index: Integer): T;
@@ -251,17 +260,27 @@ begin
 end;
 
 procedure TCustomList.Clear();
+begin
+	FCount := 0;
+end;
+
+constructor TCustomObjectList.Create(aFreeObjects: Boolean = True);
+begin
+	inherited Create;
+	FFreeObjects := aFreeObjects;
+end;
+
+procedure TCustomObjectList.Clear();
 var
 	i: Integer;
 begin
 	if FFreeObjects then begin
-		for i := FCount - 1 downto 0 do
-			FItems[i].Free;
+		for i := 0 to self.Count - 1 do
+			self.Items[i].Free;
 	end;
 
 	FCount := 0;
 end;
-
 
 constructor TMapping.Create(aLower, aUpper, MapTo: TNumber);
 begin
