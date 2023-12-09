@@ -23,20 +23,21 @@ sub _parse_input ($self, $input = $self->input)
 	return (\@instruction, \%map);
 }
 
-sub get_number_of_cycles ($self, $instruction, $map, $from, $to_re)
+sub get_number_of_cycles ($self, $instruction, $map, $current, $to_re)
 {
-	my $current = $from;
-	my $instruction_size = $instruction->@*;
+	# improves the matching speed by a lot
+	my $re_compiled = "$to_re";
+
 	my $steps = 0;
+	while ('searching') {
+		foreach my $ins ($instruction->@*) {
+			return $steps
+				if $current =~ $re_compiled;
 
-	while ($current !~ $to_re) {
-		my $instruction_ind = $steps % $instruction_size;
-
-		$current = $map->{$current}[$instruction->[$instruction_ind]];
-		$steps += 1;
+			$current = $map->{$current}[$ins];
+			$steps += 1;
+		}
 	}
-
-	return $steps;
 }
 
 sub part_1 ($self)
