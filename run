@@ -6,6 +6,8 @@ use lib 'local/lib/perl5';
 
 use Solution::External;
 
+binmode STDOUT, ':encoding(UTF-8)';
+
 my $day = shift;
 my @days;
 if ($day && $day =~ m{ \A (\d+) (?: \.\. (\d+))? \z }x) {

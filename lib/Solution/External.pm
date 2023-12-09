@@ -8,10 +8,6 @@ use class;
 
 with 'Solution';
 
-has param 'language' => (
-	isa => Str,
-);
-
 has param 'day' => (
 	isa => PositiveInt,
 );
@@ -66,13 +62,12 @@ sub run_external ($self, $part)
 	say {$fh_in} $_
 		for $self->input->@*;
 
-	# reset timer before closing input, so that less overhead will be measured
-	$self->_clear_timer;
-	$self->_timer;
-
+	my $output;
 	close $fh_in;
-	my $output = join '', readline $fh_out;
-	chomp $output;
+
+	# reset timer, so that less overhead will be measured
+	$self->_start_timer;
+	sysread $fh_out, $output, 2 << 16;
 
 	return $output;
 }
