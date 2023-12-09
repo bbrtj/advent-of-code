@@ -14,9 +14,7 @@ has field '_running_part' => (
 );
 
 has field '_timer' => (
-	isa => PositiveNum,
-	lazy => sub { time },
-	clearer => 1,
+	writer => 1,
 );
 
 has field '_input_base' => (
@@ -33,13 +31,20 @@ sub day_number ($self)
 	return $1;
 }
 
+sub _start_timer ($self)
+{
+	$self->_set_timer(time);
+}
+
+sub _end_timer ($self)
+{
+	$self->_set_timer(time - $self->_timer);
+}
+
 sub _init_part ($self, $part)
 {
 	$self->_set_running_part([$self->day_number, $part]);
-
 	$self->_clear_input_base;
-	$self->_clear_timer;
-	$self->_timer;
 }
 
 sub _print_greeting ($self)
@@ -66,23 +71,23 @@ sub _print_test_results ($self, $test_result)
 
 sub _print_results ($self, $result)
 {
-	my $time = $self->_timer;
-	$self->_clear_timer;
-	$time = $self->_timer - $time;
-
 	# print result
 	say 'Result: ' . colored($result, 'blue');
 
 	# print time with coloring
+	my $time = $self->_timer;
 	my $time_color = 'green';
-	my $threshold = 0.01;
-	for (qw(bright_green yellow red)) {
+	my $threshold = 0.001;
+	for (qw(bright_green bright_yellow yellow red)) {
 		last if $time < $threshold;
 		$threshold *= 10;
 		$time_color = $_;
 	}
-	$time = sprintf colored("%.5fs", $time_color), $time;
-	say "Run-time: $time";
+	my $time_s = int($time);
+	my $time_ms = int($time * 1_000) % 1000;
+	my $time_μs = int(($time * 1_000_000)) % 1000;
+	$time = sprintf '%ss %3sms %3sμs', $time_s, $time_ms, $time_μs;
+	say 'Run-time: ' . colored($time, $time_color);
 
 	# print empty line to separate parts
 	say '';
@@ -125,9 +130,12 @@ foreach my $part (1 .. 2) {
 
 		my $result;
 		try {
+			$self->_start_timer;
 			$result = $self->$orig;
+			$self->_end_timer;
 		}
 		catch ($e) {
+			$self->_end_timer;
 			$result = "[exception] $e";
 		}
 
