@@ -5,18 +5,18 @@ program Solution;
 uses SysUtils, Classes, Day5;
 
 var
-	vPart: Integer;
-	vLine: String;
-	vInput: TStringList;
+	lPart: Integer;
+	lLine: String;
+	lInput: TStringList;
 begin
-	vPart := StrToInt(ParamStr(1));
-	vInput := TStringList.Create;
+	lPart := StrToInt(ParamStr(1));
+	lInput := TStringList.Create;
 
 	repeat
-		readln(vLine);
-		vInput.Add(vLine);
+		readln(lLine);
+		lInput.Add(lLine);
 	until eof;
 
-	writeln(RunPart(vPart, vInput));
+	write(RunPart(lPart, lInput));
 end.
 

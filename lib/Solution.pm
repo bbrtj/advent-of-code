@@ -8,7 +8,7 @@ use Util;
 
 use class -role;
 
-use constant YEAR => '????';
+use constant YEAR => '2023';
 
 has param 'language' => (
 	isa => Str,
