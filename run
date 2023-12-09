@@ -5,6 +5,7 @@ use lib 'lib';
 use lib 'local/lib/perl5';
 
 use Solution::External;
+use Util;
 
 binmode STDOUT, ':encoding(UTF-8)';
 
@@ -20,6 +21,7 @@ die 'requires day number(s)'
 	if !@days;
 
 my $language = shift;
+my $total_time = 0;
 
 foreach my $day (@days) {
 	my $obj;
@@ -38,6 +40,13 @@ foreach my $day (@days) {
 	}
 
 	$obj->part_1;
+	$total_time += $obj->timer;
+
 	$obj->part_2;
+	$total_time += $obj->timer;
+}
+
+if (@days > 1) {
+	Util->print_time($total_time, header => 'Total', time_multiplier => @days * 2);
 }
 

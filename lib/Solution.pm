@@ -4,6 +4,7 @@ use Types::Common -types;
 use Time::HiRes qw(time);
 use Term::ANSIColor;
 use builtin qw(trim);
+use Util;
 
 use class -role;
 no warnings qw(experimental::builtin);
@@ -20,8 +21,8 @@ has field '_running_part' => (
 	writer => 1,
 );
 
-has field '_timer' => (
-	writer => 1,
+has field 'timer' => (
+	writer => -hidden,
 );
 
 has field '_input_base' => (
@@ -45,7 +46,7 @@ sub _start_timer ($self)
 
 sub _end_timer ($self)
 {
-	$self->_set_timer(time - $self->_timer);
+	$self->_set_timer(time - $self->timer);
 }
 
 sub _init_part ($self, $part)
@@ -84,19 +85,7 @@ sub _print_results ($self, $result)
 	say 'Result: ' . colored($result, 'blue');
 
 	# print time with coloring
-	my $time = $self->_timer;
-	my $time_color = 'green';
-	my $threshold = 0.001;
-	for (qw(bright_green bright_yellow yellow red)) {
-		last if $time < $threshold;
-		$threshold *= 10;
-		$time_color = $_;
-	}
-	my $time_s = int($time);
-	my $time_ms = int($time * 1_000) % 1000;
-	my $time_μs = int(($time * 1_000_000)) % 1000;
-	$time = sprintf '%ss %3sms %3sμs', $time_s, $time_ms, $time_μs;
-	say 'Run-time: ' . colored($time, $time_color);
+	Util->print_time($self->timer);
 
 	# print empty line to separate parts
 	say '';
