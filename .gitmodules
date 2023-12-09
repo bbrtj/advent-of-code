@@ -1,0 +1,3 @@
+[submodule "external/pascal/custom-generics"]
+	path = external/pascal/custom-generics
+	url = https://github.com/bbrtj/pascal-custom-generics
