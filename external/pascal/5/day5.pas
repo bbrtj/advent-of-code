@@ -4,7 +4,7 @@ unit Day5;
 
 interface
 
-uses SysUtils, Classes, Math;
+uses SysUtils, Classes, Math, GContainers;
 
 function RunPart(Part: Integer; InputData: TStringList): String;
 
@@ -16,42 +16,6 @@ type
 		Upper: TNumber;
 
 		constructor Create(const aLower, aUpper: TNumber);
-	end;
-
-	generic TCustomList<T> = class
-	private
-		type TRangeArray = array of T;
-
-	private
-		FLength: Integer;
-		FCount: Integer;
-		FItems: TRangeArray;
-
-		procedure AdjustLength(NewLength: Integer); inline;
-		function GetItem(Index: Integer): T; inline;
-		procedure SetItem(Index: Integer; Value: T); inline;
-
-	public
-		constructor Create();
-		destructor Destroy; override;
-
-		procedure Add(Item: T); inline;
-		procedure AddList(Other: TCustomList); inline;
-		procedure Clear(); virtual;
-
-		property Count: Integer read FCount;
-		property Items[Index: Integer]: T read GetItem write SetItem; default;
-	end;
-
-	generic TCustomObjectList<T> = class(specialize TCustomList<T>)
-	private
-		FFreeObjects: Boolean;
-
-	public
-		constructor Create(aFreeObjects: Boolean = True);
-		procedure Clear(); override;
-
-		property FreeObjects: Boolean read FFreeObjects write FFreeObjects;
 	end;
 
 	TRangeList = specialize TCustomObjectList<TRange>;
@@ -124,21 +88,21 @@ end;
 
 function PartOne(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
+	lMap: TAlmanacMap;
 	lNumbers: TNumberList;
 	lNewNumbers: TNumberList;
-	i, j: Integer;
+	i: Integer;
 begin
 	lNumbers := TNumberList.Create;
 	lNewNumbers := TNumberList.Create;
 
 	lNumbers.AddList(Numbers);
 
-	for i := 0 to Maps.Count - 1 do begin
-		for j := 0 to lNumbers.Count - 1 do
-			lNewNumbers.Add(Maps[i].MapNumber(lNumbers[j]));
+	for lMap in Maps do begin
+		for i := 0 to lNumbers.Count - 1 do
+			lNewNumbers.Add(lMap.MapNumber(lNumbers[i]));
 
-		lNumbers.Clear;
-		lNumbers.AddList(lNewNumbers);
+		lNumbers.Assign(lNewNumbers);
 		lNewNumbers.Clear;
 	end;
 
@@ -153,10 +117,10 @@ end;
 
 function PartTwo(Numbers: TNumberList; Maps: TAlmanacMapList): TNumber;
 var
+	lMap: TAlmanacMap;
 	lRanges: TRangeList;
 	lNewRanges: TRangeList;
-	i, j: Integer;
-
+	i: Integer;
 begin
 	lRanges := TRangeList.Create(False);
 	lNewRanges := TRangeList.Create(False);
@@ -168,13 +132,12 @@ begin
 		);
 	end;
 
-	for i := 0 to Maps.Count - 1 do begin
-		for j := 0 to lRanges.Count - 1 do begin
-			Maps[i].MapRanges(lRanges[j], lNewRanges);
+	for lMap in Maps do begin
+		for i := 0 to lRanges.Count - 1 do begin
+			lMap.MapRanges(lRanges[i], lNewRanges);
 		end;
 
-		lRanges.Clear;
-		lRanges.AddList(lNewRanges);
+		lRanges.Assign(lNewRanges);
 		lNewRanges.Clear;
 	end;
 
@@ -212,74 +175,6 @@ constructor TRange.Create(const aLower, aUpper: TNumber);
 begin
 	self.Lower := aLower;
 	self.Upper := aUpper;
-end;
-
-constructor TCustomList.Create();
-begin
-	self.AdjustLength(2);
-	FCount := 0;
-end;
-
-destructor TCustomList.Destroy;
-begin
-	self.Clear;
-	inherited;
-end;
-
-function TCustomList.GetItem(Index: Integer): T;
-begin
-	result := FItems[Index];
-end;
-
-procedure TCustomList.SetItem(Index: Integer; Value: T);
-begin
-	FItems[Index] := Value;
-end;
-
-procedure TCustomList.AdjustLength(NewLength: Integer);
-begin
-	FLength := NewLength;
-	SetLength(FItems, NewLength);
-end;
-
-procedure TCustomList.Add(Item: T);
-begin
-	FItems[FCount] := Item;
-
-	Inc(FCount);
-	if FCount = FLength then
-		self.AdjustLength(FLength * 2);
-end;
-
-procedure TCustomList.AddList(Other: TCustomList);
-var
-	i: Integer;
-begin
-	for i := 0 to Other.Count - 1 do
-		self.Add(Other[i]);
-end;
-
-procedure TCustomList.Clear();
-begin
-	FCount := 0;
-end;
-
-constructor TCustomObjectList.Create(aFreeObjects: Boolean = True);
-begin
-	inherited Create;
-	FFreeObjects := aFreeObjects;
-end;
-
-procedure TCustomObjectList.Clear();
-var
-	i: Integer;
-begin
-	if FFreeObjects then begin
-		for i := 0 to self.Count - 1 do
-			self.Items[i].Free;
-	end;
-
-	FCount := 0;
 end;
 
 constructor TMapping.Create(aLower, aUpper, MapTo: TNumber);
@@ -364,8 +259,7 @@ begin
 				lNewRanges.Add(lRanges[j]);
 		end;
 
-		lRanges.Clear;
-		lRanges.AddList(lNewRanges);
+		lRanges.Assign(lNewRanges);
 		lNewRanges.Clear;
 	end;
 
