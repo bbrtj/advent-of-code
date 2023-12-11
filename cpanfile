@@ -8,3 +8,11 @@ requires 'namespace::autoclean';
 requires 'Lingua::EN::Numbers';
 requires 'Math::Utils';
 
+# may uncomment for speed
+# requires 'MooX::XSConstructor';
+# requires 'Class::XSAccessor';
+# requires 'List::Util::XS';
+# requires 'Type::Tiny::XS';
+
+# vim: ft=perl
+
