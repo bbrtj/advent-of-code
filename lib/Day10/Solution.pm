@@ -2,6 +2,7 @@ package Day10::Solution;
 
 use Day10::Maze;
 use builtin qw(indexed);
+use List::Util qw(first);
 
 use class;
 
@@ -71,17 +72,20 @@ sub part_2 ($self)
 
 	my $grid = $maze->find_borders;
 	my $sum_inside = 0;
-	foreach my ($y, $directions) (indexed $grid->@*) {
-		my $last_direction;
 
-		foreach my ($x, $direction) (indexed $directions->@*) {
+	# find up - to know when we're inside
+	my $up = first { defined } $grid->[0]->@*;
+
+	foreach my $directions ($grid->@*) {
+		my $last_direction = 0;
+
+		foreach my $direction ($directions->@*) {
 			if (!defined $direction) {
 				$sum_inside += 1
-					if $last_direction && $last_direction == 1;
+					if $last_direction == $up;
 			}
 			else {
-				$last_direction = $direction
-					if $direction;
+				$last_direction = $direction;
 			}
 		}
 	}

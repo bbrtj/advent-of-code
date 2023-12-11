@@ -3,6 +3,7 @@ package Day10::Maze;
 use Types::Common -types;
 use Day10::MazePipe;
 use builtin qw(indexed);
+use List::Util qw(any);
 
 use class;
 
@@ -55,6 +56,10 @@ sub find_borders ($self)
 		$item = $next;
 		last if $item == $start
 	}
+
+	@grid = grep {
+		any { defined } $_->@*
+	} @grid;
 
 	return \@grid;
 }
