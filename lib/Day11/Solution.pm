@@ -1,6 +1,7 @@
 package Day11::Solution;
 
 use builtin qw(indexed);
+use List::Util qw(sum);
 
 use class;
 
@@ -42,20 +43,25 @@ sub _adjust_positions ($self, $stars, $ind, $by = 1)
 	}
 }
 
+sub _find_all_distances($self, $stars)
+{
+	my @distances;
+	foreach my ($ind, $this_star) (indexed $stars->@*) {
+		foreach my $that_star ($stars->@[$ind + 1 .. $stars->$#*]) {
+			push @distances, abs($this_star->[0] - $that_star->[0]) + abs($this_star->[1] - $that_star->[1]);
+		}
+	}
+
+	return \@distances;
+}
+
 sub part_1 ($self)
 {
 	my $stars = $self->_parse_input;
 	$self->_adjust_positions($stars, 0);
 	$self->_adjust_positions($stars, 1);
 
-	my $sum = 0;
-	foreach my ($ind, $this_star) (indexed $stars->@*) {
-		foreach my $that_star ($stars->@[$ind + 1 .. $stars->$#*]) {
-			$sum += abs($this_star->[0] - $that_star->[0]) + abs($this_star->[1] - $that_star->[1]);
-		}
-	}
-
-	return $sum;
+	return sum $self->_find_all_distances($stars)->@*;
 }
 
 sub part_2 ($self)
@@ -64,13 +70,6 @@ sub part_2 ($self)
 	$self->_adjust_positions($stars, 0, 1_000_000 - 1);
 	$self->_adjust_positions($stars, 1, 1_000_000 - 1);
 
-	my $sum = 0;
-	foreach my ($ind, $this_star) (indexed $stars->@*) {
-		foreach my $that_star ($stars->@[$ind + 1 .. $stars->$#*]) {
-			$sum += abs($this_star->[0] - $that_star->[0]) + abs($this_star->[1] - $that_star->[1]);
-		}
-	}
-
-	return $sum;
+	return sum $self->_find_all_distances($stars)->@*;
 }
 
