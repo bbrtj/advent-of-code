@@ -1,6 +1,7 @@
 package Day10::MazePipe;
 
 use Types::Common -types;
+use builtin qw(weaken);
 
 use class;
 
@@ -8,12 +9,9 @@ has param 'position' => (
 	# isa => Tuple[Int, Int],
 );
 
-has param 'type' => (
-	# isa => Tuple[Str, Str],
-);
-
-has param 'path' => (
-	# isa => Tuple[Int, Int],
+has field 'length' => (
+	# isa => Int,
+	writer => 1,
 );
 
 has field 'from' => (
@@ -25,26 +23,23 @@ has field 'from' => (
 has field 'to' => (
 	# isa => InstanceOf['Day10::MazePipe'],
 	writer => 1,
-	weak_ref => 1,
 );
 
-sub _adjust_position($self, $x, $y, $pos_type, $pos_dir = 1)
+sub set_weak_to ($self, $to)
 {
-	my $is_x = $pos_type eq 'x';
-
-	return ($x + $is_x * $pos_dir, $y + !$is_x * $pos_dir);
+	$self->{to} = $to;
+	weaken $self->{to};
 }
 
-sub next_position ($self) {
+sub next_position ($self, @moves) {
 	my ($x, $y) = $self->position->@*;
-	my $pos_type = $self->type;
-	my $pos_dir = $self->path;
 
-	for my $ind (0 .. 1) {
-		my ($x2, $y2) = $self->_adjust_position($x, $y, $pos_type->[$ind], $pos_dir->[$ind]);
+	foreach my $move (@moves) {
+		my $x2 = $x + $move->[0];
+		my $y2 = $y + $move->[1];
 
-		if ($self->from) {
-			my ($x, $y) = $self->from->position->@*;
+		if (my $from = $self->from) {
+			my ($x, $y) = $from->position->@*;
 			next if $x == $x2 && $y == $y2;
 		}
 

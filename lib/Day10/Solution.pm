@@ -11,17 +11,16 @@ sub _parse_input ($self, $input = $self->input)
 {
 	state $start_mark = 'S';
 	state %marks = (
-		'|' => [['y', 'y'], [-1, 1]],
-		'-' => [['x', 'x'], [-1, 1]],
-		'F' => [['x', 'y'], [1, 1]],
-		'7' => [['x', 'y'], [-1, 1]],
-		'J' => [['x', 'y'], [-1, -1]],
-		'L' => [['x', 'y'], [1, -1]],
+		'|' => [[0, -1], [0, 1]],
+		'-' => [[-1, 0], [1, 0]],
+		'F' => [[0, 1], [1, 0]],
+		'7' => [[0, 1], [-1, 0]],
+		'J' => [[0, -1], [-1, 0]],
+		'L' => [[0, -1], [1, 0]],
 	);
 
 	$input->@* = map { [split //, $_] } $input->@*;
-	my $maze = Day10::Maze->new;
-	my $starting_pos = sub {
+	my ($start_x, $start_y) = sub {
 		foreach my ($y, $line) (indexed $input->@*) {
 			foreach my ($x, $mark) (indexed $line->@*) {
 				if ($mark eq $start_mark) {
@@ -38,37 +37,39 @@ sub _parse_input ($self, $input = $self->input)
 					}
 
 					$line->[$x] = $mark;
-					return [$x, $y];
+					return ($x, $y);
 				}
 			}
 		}
 	}->();
 
-	my ($x, $y) = $starting_pos->@*;
-	my $start = $maze->add_pipe($x, $y, $marks{$input->[$y][$x]}->@*);
+	my $maze = Day10::Maze->new;
+	my $start = $maze->add_pipe($start_x, $start_y);
 	my $item = $start;
 
+	my ($x, $y) = ($start_x, $start_y);
 	while ('finding loop') {
-		($x, $y) = $item->next_position;
-		$item = $maze->add_pipe($x, $y, $marks{$input->[$y][$x]}->@*, $item);
-		last if $item == $start;
+		($x, $y) = $item->next_position($marks{$input->[$y][$x]}->@*);
+		last if $x == $start_x && $y == $start_y;
+		$item = $maze->add_pipe($x, $y, $item);
 	}
 
-	return ($maze, $starting_pos);
+	$maze->finalize($start, $item);
+	return $maze;
 }
 
 sub part_1 ($self)
 {
-	my ($maze, $starting_pos) = $self->_parse_input;
+	my $maze = $self->_parse_input;
 
-	return $maze->find_furthest($starting_pos->@*);
+	return ($maze->start->from->length + 1) / 2
 }
 
 sub part_2 ($self)
 {
-	my ($maze, $starting_pos) = $self->_parse_input;
+	my $maze = $self->_parse_input;
 
-	my $grid = $maze->find_borders($starting_pos->@*);
+	my $grid = $maze->find_borders;
 	my $sum_inside = 0;
 	foreach my ($y, $directions) (indexed $grid->@*) {
 		my $last_direction;
@@ -79,9 +80,8 @@ sub part_2 ($self)
 					if $last_direction && $last_direction == 1;
 			}
 			else {
-				if ($direction) {
-					$last_direction = $direction;
-				}
+				$last_direction = $direction
+					if $direction;
 			}
 		}
 	}

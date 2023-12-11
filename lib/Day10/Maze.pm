@@ -3,69 +3,56 @@ package Day10::Maze;
 use Types::Common -types;
 use Day10::MazePipe;
 use builtin qw(indexed);
-use List::Util qw(all);
 
 use class;
 
-has field 'positions' => (
-	isa => ArrayRef [ArrayRef [Maybe [InstanceOf ['Day10::MazePipe']]]],
-	default => sub { [] },
-);
-
-has field 'start_pos' => (
+has field 'start' => (
+	isa => InstanceOf ['Day10::MazePipe'],
 	writer => -hidden,
-	predicate => 1,
 );
 
-sub add_pipe ($self, $x, $y, $type, $path, $last = undef)
+sub finalize ($self, $start, $last)
+{
+	$self->_set_start($start);
+
+	$start->set_from($last);
+	$last->set_weak_to($start);
+}
+
+sub add_pipe ($self, $x, $y, $last = undef)
 {
 	# NOTE: $type and $path are array references, but no cloning - treating
 	# them as readonly
-	my $item = $self->positions->[$y][$x] //= Day10::MazePipe->new(
+	my $item = Day10::MazePipe->new(
 		position => [$x, $y],
-		type => $type,
-		path => $path,
 	);
 
 	if ($last) {
 		$last->set_to($item);
 		$item->set_from($last);
+		$item->set_length($last->length + 1);
+	}
+	else {
+		$item->set_length(0);
 	}
 
 	return $item;
 }
 
-sub find_furthest ($self, $start_x, $start_y)
+sub find_borders ($self)
 {
-	my $start = $self->positions->[$start_y][$start_x];
-
-	my $item_left = $start->to;
-	my $item_right = $start->from;
-
-	my $current = 1;
-
-	while ($item_left != $item_right) {
-		$item_left = $item_left->to;
-		$item_right = $item_right->from;
-
-		$current += 1;
-	}
-
-	return $current;
-}
-
-sub find_borders ($self, $start_x, $start_y)
-{
-	my $start = $self->positions->[$start_y][$start_x];
-
+	my $start = $self->start;
 	my $item = $start;
+	my $last = $start->from;
 	my @grid;
 
-	while ('looping') {
-		my $direction = $item->to->position->[1] - $item->from->position->[1];
+	while ('traversing') {
+		my $next = $item->to;
+		my $direction = $next->position->[1] - $last->position->[1];
 		$grid[$item->position->[1]][$item->position->[0]] = $direction <=> 0;
 
-		$item = $item->to;
+		$last = $item;
+		$item = $next;
 		last if $item == $start
 	}
 
