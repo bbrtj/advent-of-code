@@ -110,7 +110,8 @@ sub _test ($self, $part, $orig)
 	}
 	catch ($e) {
 		my $file_missing = $e =~ /No data file/;
-		$test_result = $file_missing ? undef : !!0;
+		chomp $e unless ref $e;
+		$test_result = $file_missing ? undef : \"[exception] $e";
 	}
 
 	return $test_result;
