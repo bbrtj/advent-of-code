@@ -2,6 +2,7 @@ package Day12::Solution;
 
 use List::Util qw(sum);
 use Memoize;
+use Util qw(parallel_map);
 
 use class;
 
@@ -84,7 +85,7 @@ sub part_1 ($self)
 {
 	my $springs = $self->_parse_input();
 
-	return sum map { $self->get_combinations($_->@*) } $springs->@*;
+	return sum parallel_map { $self->get_combinations($_->@*) } $springs->@*;
 }
 
 sub part_2 ($self)
@@ -92,6 +93,6 @@ sub part_2 ($self)
 	my $springs = $self->_parse_input();
 	$self->_unfold_springs($springs);
 
-	return sum map { $self->get_combinations($_->@*) } $springs->@*;
+	return sum parallel_map { $self->get_combinations($_->@*) } $springs->@*;
 }
 
