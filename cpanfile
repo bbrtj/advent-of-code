@@ -5,6 +5,7 @@ requires 'Mooish::AttributeBuilder';
 requires 'Type::Tiny';
 requires 'namespace::autoclean';
 
+# 2023 modules
 requires 'Lingua::EN::Numbers';
 requires 'Math::Utils';
 

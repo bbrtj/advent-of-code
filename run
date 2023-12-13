@@ -1,6 +1,13 @@
 #!/usr/bin/env perl
 
 use v5.38;
+
+my $year;
+BEGIN {
+	$year = shift || die 'requires year';
+	unshift @INC, "$year/lib";
+}
+
 use lib 'lib';
 use lib 'local/lib/perl5';
 
@@ -28,6 +35,7 @@ foreach my $day (@days) {
 
 	if ($language) {
 		$obj = Solution::External->new(
+			year => $year,
 			day => $day,
 			language => $language,
 		);
@@ -36,7 +44,7 @@ foreach my $day (@days) {
 		my $pkg = "Day${day}::Solution";
 		eval "use $pkg; 1" or die "error loading solution for day $day:\n$@";
 
-		$obj = $pkg->new;
+		$obj = $pkg->new(year => $year);
 	}
 
 	$obj->part_1;

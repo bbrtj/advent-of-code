@@ -8,7 +8,9 @@ use Util;
 
 use class -role;
 
-use constant YEAR => '2023';
+has param 'year' => (
+	isa => PositiveInt,
+);
 
 has param 'language' => (
 	isa => Str,
@@ -59,7 +61,7 @@ sub _print_greeting ($self)
 	my ($day, $part) = $self->_running_part->@*;
 	my $lang = ucfirst lc $self->language;
 
-	say colored('Advent of Code ' . YEAR, 'white');
+	say colored('Advent of Code ' . $self->year, 'white');
 	say colored("Day $day part $part - $lang", 'white');
 }
 
@@ -144,7 +146,7 @@ foreach my $part (1 .. 2) {
 sub input ($self, $empty_lines = !!0)
 {
 	my ($day, $part) = $self->_running_part->@*;
-	my $base = $self->_input_base;
+	my $base = $self->year . '/' . $self->_input_base;
 	my @filenames = (
 		"$base/day${day}_part${part}.txt",
 		"$base/day${day}.txt",

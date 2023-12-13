@@ -24,8 +24,9 @@ around 'day_number' => sub ($orig, $self) {
 sub solution_path ($self)
 {
 	my $lang = $self->language;
+	my $year = $self->year;
 	my $day = $self->day;
-	return "external/$lang/$day";
+	return "external/$lang/$year/$day";
 }
 
 sub BUILD ($self, $args)
