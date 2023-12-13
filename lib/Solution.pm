@@ -141,7 +141,7 @@ foreach my $part (1 .. 2) {
 	};
 }
 
-sub input ($self)
+sub input ($self, $empty_lines = !!0)
 {
 	my ($day, $part) = $self->_running_part->@*;
 	my $base = $self->_input_base;
@@ -154,7 +154,10 @@ sub input ($self)
 		if (open my $fh, '<', $filename) {
 			my @lines = readline $fh;
 
-			return [grep { length } map { chomp; $_ } @lines];
+			return $empty_lines
+				? [map { chomp; $_ } @lines]
+				: [grep { length } map { chomp; $_ } @lines]
+				;
 		}
 	}
 
