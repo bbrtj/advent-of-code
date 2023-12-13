@@ -166,3 +166,10 @@ sub input ($self, $empty_lines = !!0)
 	die "No data file in '$base' for day $day part $part";
 }
 
+sub debug ($self, $string, $show = !!1)
+{
+	return unless $show;
+	return unless $self->_input_base eq 'test';
+	say $string;
+}
+
