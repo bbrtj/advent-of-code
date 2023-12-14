@@ -1,79 +1,77 @@
 package Day14::Solution;
 
 use builtin qw(indexed);
-use List::Util qw(sum0);
-use Memoize;
+use Day14::Platform;
 
 use class;
 
 with 'Solution';
 
-sub _flip ($self, $pattern)
-{
-	my @columns;
-	foreach my $row ($pattern->@*) {
-		my @characters = split //, $row;
-		for my $ind (keys @characters) {
-			$columns[$ind] //= '';
-			$columns[$ind] .= $characters[$ind];
-		}
-	}
-
-	$pattern->@* = @columns;
-}
-
 sub _parse_input ($self, $input = $self->input)
 {
-	my @patterns;
-	my @last_pattern;
+	my $platform = Day14::Platform->new;
 	foreach my $line ($input->@*) {
-		if (length $line) {
-			$line =~ tr/.O#/012/;
-			push @last_pattern, $line;
-		}
-		else {
-			push @patterns, [@last_pattern];
-			@last_pattern = ();
-		}
+		$line =~ tr/.O#/012/;
+		$platform->add_row([split //, $line]);
 	}
 
-	push @patterns, [@last_pattern]
-		if @last_pattern;
-
-	return \@patterns;
+	return $platform;
 }
 
-sub tilt_north_and_get_load ($self, $pattern)
+sub tilt ($self, $platform)
 {
-	$self->_flip($pattern);
+	foreach my $pos1 (0 .. $platform->size_primary - 1) {
+		my $line = $platform->get_line($pos1);
 
-	my $load = 0;
-	foreach my ($x, $col) (indexed $pattern->@*) {
-		my $total_len = length $col;
-		my @parts = split /(2+)/, $col;
-		my $pos = 0;
-		my $movable = !!1;
-
-		foreach my $part (@parts) {
-			$load += sum0 $total_len - $pos - ($part =~ tr/1/1/) + 1 .. $total_len - $pos
-				if $movable;
-			$movable = !$movable;
-			$pos += length $part;
+		my $last_obstacle = -1;
+		my $pos2 = 0;
+		foreach my $item ($line->@*) {
+			if ($item == 1) {
+				$item = 0;
+				$line->[++$last_obstacle] = 1;
+			}
+			elsif ($item == 2) {
+				$last_obstacle = $pos2;
+			}
+			++$pos2;
 		}
-	}
 
-	return $load;
+		$platform->set_line($pos1, $line);
+	}
 }
 
-sub get_load ($self, $pattern)
+sub tilt_reversed ($self, $platform)
 {
-	$self->_flip($pattern);
+	foreach my $pos1 (0 .. $platform->size_primary - 1) {
+		my $line = $platform->get_line($pos1);
+
+		my $last_obstacle = $line->@*;
+		my $pos2 = $last_obstacle - 1;
+		foreach my $item (reverse $line->@*) {
+			if ($item == 1) {
+				$item = 0;
+				$line->[--$last_obstacle] = 1;
+			}
+			elsif ($item == 2) {
+				$last_obstacle = $pos2;
+			}
+			--$pos2;
+		}
+
+		$platform->set_line($pos1, $line);
+	}
+}
+
+sub get_load ($self, $platform)
+{
+	$platform->set_vertical;
 
 	my $load = 0;
-	foreach my ($x, $col) (indexed $pattern->@*) {
-		my $total_len = length $col;
-		for (my $i = 0; $i < $total_len; ++$i) {
-			$load += $total_len - $i if substr($col, $i, 1) eq 1;
+	foreach my $pos1 (0 .. $platform->size_primary - 1) {
+		my @line = $platform->get_line($pos1)->@*;
+
+		foreach my ($pos2, $item) (indexed @line) {
+			$load += @line - $pos2 if $item == 1;
 		}
 	}
 
@@ -82,54 +80,33 @@ sub get_load ($self, $pattern)
 
 sub tilt_cycles ($self, $platform, $total_count)
 {
-	my sub tilt ($pattern, $mul) {
-		foreach my ($x, $col) (indexed $pattern->@*) {
-			$col = scalar reverse $col if $mul > 0;
-
-			my @parts = split /(2+)/, $col;
-			my $movable = !!1;
-
-			foreach my $part (@parts) {
-				if ($movable) {
-					my $movable_rocks = ($part =~ tr/1/0/);
-					$part = ('1' x $movable_rocks) . ('0' x (length($part) - $movable_rocks));
-				}
-
-				$movable = !$movable;
-			}
-
-			my $result = join '', @parts;
-			$result = scalar reverse $result if $mul > 0;
-			$pattern->[$x] = $result;
-		}
-	}
-
 	my %known;
-	foreach my $pattern ($platform->@*) {
-		for (my $count = $total_count; $count > 0; --$count) {
-			$self->_flip($pattern);
-			tilt($pattern, -1);
-			$self->_flip($pattern);
-			tilt($pattern, -1);
-			$self->_flip($pattern);
-			tilt($pattern, 1);
-			$self->_flip($pattern);
-			tilt($pattern, 1);
+	my %count_states;
+	for (my $count = $total_count; $count > 0; --$count) {
+		$platform->set_vertical;
+		$self->tilt($platform);
 
-			my $key = join ',', $pattern->@*;
-			if ($known{$key}) {
-				my $grand_cycle = $known{$key} - $count;
-				my $wanted_count = $known{$key} - ($count - 1) % $grand_cycle;
+		$platform->set_horizontal;
+		$self->tilt($platform);
 
-				$pattern->@* = split /,/, first { $known{$_} == $wanted_count } keys %known;
-				last;
-			}
-			else {
-				$known{$key} = $count;
-			}
+		$platform->set_vertical;
+		$self->tilt_reversed($platform);
+
+		$platform->set_horizontal;
+		$self->tilt_reversed($platform);
+
+		my $key = $platform->serialize;
+		if ($known{$key}) {
+			my $grand_cycle = $known{$key} - $count;
+			my $wanted_count = $known{$key} - ($count - 1) % $grand_cycle;
+
+			$platform->deserialize($count_states{$wanted_count});
+			last;
 		}
-
-		%known = ();
+		else {
+			$known{$key} = $count;
+			$count_states{$count} = $key;
+		}
 	}
 }
 
@@ -137,7 +114,11 @@ sub part_1 ($self)
 {
 	my $platform = $self->_parse_input;
 
-	return sum0 map { $self->tilt_north_and_get_load($_) } $platform->@*;
+	$platform->set_vertical;
+	$self->tilt($platform);
+	$platform->set_horizontal;
+
+	return $self->get_load($platform);
 }
 
 sub part_2 ($self)
@@ -145,6 +126,6 @@ sub part_2 ($self)
 	my $platform = $self->_parse_input;
 
 	$self->tilt_cycles($platform, 1_000_000_000);
-	return sum0 map { $self->get_load($_) } $platform->@*;
+	return $self->get_load($platform);
 }
 

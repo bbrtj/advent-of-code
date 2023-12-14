@@ -8,6 +8,7 @@ requires 'namespace::autoclean';
 # 2023 modules
 requires 'Lingua::EN::Numbers';
 requires 'Math::Utils';
+requires 'Sereal';
 
 # may uncomment for speed
 # requires 'MooX::XSConstructor';
