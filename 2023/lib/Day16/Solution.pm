@@ -1,6 +1,6 @@
 package Day16::Solution;
 
-use List::Util qw(sum max);
+use List::Util qw(max);
 use builtin qw(indexed);
 use Util qw(parallel_map);
 use Day16::Layout;
@@ -23,6 +23,7 @@ sub _parse_input ($self, $input = $self->input)
 		}
 	}
 
+	$layout->finalize;
 	return $layout;
 }
 
@@ -31,7 +32,7 @@ sub part_1 ($self)
 	my $layout = $self->_parse_input;
 	my $energized = $layout->run([[-1, 0], [1, 0]]);
 
-	return sum values $energized->%*;
+	return scalar values $energized->%*;
 }
 
 sub part_2 ($self)
@@ -42,13 +43,13 @@ sub part_2 ($self)
 	my $check_x = sub ($conf_x, $conf_y) {
 		my $direction = $conf_x == 0 ? 1 : -1;
 		my $energized = $layout->run([[$conf_x - $direction, $conf_y], [$direction, 0]]);
-		return sum values $energized->%*;
+		return scalar values $energized->%*;
 	};
 
 	my $check_y = sub ($conf_x, $conf_y) {
 		my $direction = $conf_y == 0 ? 1 : -1;
 		my $energized = $layout->run([[$conf_x, $conf_y - $direction], [0, $direction]]);
-		return sum values $energized->%*;
+		return scalar values $energized->%*;
 	};
 
 	foreach my $conf_x (0, $layout->size_x - 1) {

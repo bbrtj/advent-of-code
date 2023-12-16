@@ -12,7 +12,7 @@ has field 'size_y' => (
 	writer => 1,
 );
 
-has field 'reflectors' => (
+has field 'obstacles' => (
 	isa => HashRef [Str],
 	default => sub { {} },
 );
@@ -85,39 +85,60 @@ sub add_reflector ($self, $x, $y, $type)
 	);
 
 	return unless $types{$type};
-	$self->reflectors->{"$x;$y"} = $self->can($types{$type});
+	$self->obstacles->{"$x;$y"} = $self->can($types{$type});
+}
+
+sub finalize ($self)
+{
+	my $size_x = $self->size_x;
+	my $size_y = $self->size_y;
+	my $obstacles = $self->obstacles;
+
+	# make borders as obstacles
+
+	foreach my $x (-1, $size_x) {
+		foreach my $y (0 .. $size_y - 1) {
+			$obstacles->{"$x;$y"} = undef;
+		}
+	}
+
+	foreach my $y (-1, $size_y) {
+		foreach my $x (0 .. $size_x - 1) {
+			$obstacles->{"$x;$y"} = undef;
+		}
+	}
 }
 
 sub run ($self, $starting_beam)
 {
-	my $reflectors = $self->reflectors;
-	my $size_x = $self->size_x;
-	my $size_y = $self->size_y;
-
+	my $obstacles = $self->obstacles;
 	my @beams = ($starting_beam);
 	my %memory;
 	my %energized;
 
-	$memory{$_} = {} for keys $reflectors->%*;
+	for (keys $obstacles->%*) {
+		$memory{$_} = {} if defined $obstacles->{$_};
+	}
 
+	my ($beam, $pos_str); # predefined for slight speed boost
 	while (@beams > 0) {
-		my @new_beams;
-		foreach my $beam (@beams) {
-			$beam->[0][0] += $beam->[1][0];
-			$beam->[0][1] += $beam->[1][1];
-			my $pos_str = join ';', $beam->[0]->@*;
+		$beam = $beams[0];
+		$beam->[0][0] += $beam->[1][0];
+		$beam->[0][1] += $beam->[1][1];
+		$pos_str = join ';', $beam->[0]->@*;
 
-			if ($reflectors->{$pos_str}) {
+		if (exists $obstacles->{$pos_str}) {
+			if ($obstacles->{$pos_str}) {
+				splice @beams, 0, 1, $obstacles->{$pos_str}->($self, $beam, $memory{$pos_str});
 				$energized{$pos_str} = 1;
-				push @new_beams, $reflectors->{$pos_str}->($self, $beam, $memory{$pos_str});
 			}
-			elsif (0 <= $beam->[0][0] < $size_x && 0 <= $beam->[0][1] < $size_y) {
-				$energized{$pos_str} = 1;
-				push @new_beams, $beam;
+			else {
+				shift @beams;
 			}
 		}
-
-		@beams = @new_beams;
+		else {
+			$energized{$pos_str} = 1;
+		}
 	}
 
 	return \%energized;
