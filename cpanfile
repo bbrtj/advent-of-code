@@ -10,6 +10,7 @@ requires 'Smart::Comments';
 requires 'Lingua::EN::Numbers';
 requires 'Math::Utils';
 requires 'Sereal';
+requires 'List::BinarySearch';
 
 # may uncomment for speed
 # requires 'MooX::XSConstructor';
