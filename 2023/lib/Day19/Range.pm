@@ -41,22 +41,12 @@ sub combinations ($self)
 	return product @diffs;
 }
 
-sub constraints_lower ($self, $what, $value)
-{
-	return $self->possible->{$what}[0] > $value;
-}
-
 sub set_lower ($self, $what, $value)
 {
 	my $pos = $self->possible;
 	$pos->{$what}[0] = $value;
 	$self->set_valid(!!0)
 		if $pos->{$what}[0] > $pos->{$what}[1];
-}
-
-sub constraints_upper ($self, $what, $value)
-{
-	return $self->possible->{$what}[1] < $value;
 }
 
 sub set_upper ($self, $what, $value)
