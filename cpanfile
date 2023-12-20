@@ -4,6 +4,7 @@ requires 'Moo';
 requires 'Mooish::AttributeBuilder';
 requires 'Type::Tiny';
 requires 'namespace::autoclean';
+requires 'Smart::Comments';
 
 # 2023 modules
 requires 'Lingua::EN::Numbers';

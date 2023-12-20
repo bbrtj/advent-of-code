@@ -324,6 +324,20 @@ DISTRIBUTIONS
       Test::Warn 0
       XSLoader 0
       perl 5.008
+  Smart-Comments-1.06
+    pathname: N/NE/NEILB/Smart-Comments-1.06.tar.gz
+    provides:
+      Smart::Comments 1.06
+    requirements:
+      Carp 0
+      Data::Dumper 0
+      ExtUtils::MakeMaker 0
+      Filter::Simple 0
+      List::Util 0
+      Text::Balanced 0
+      perl 5.008
+      strict 0
+      warnings 0
   Sub-Exporter-Progressive-0.001013
     pathname: F/FR/FREW/Sub-Exporter-Progressive-0.001013.tar.gz
     provides:
