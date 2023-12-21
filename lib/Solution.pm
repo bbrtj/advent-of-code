@@ -32,6 +32,11 @@ has field '_input_base' => (
 	lazy => sub { 'input' },
 );
 
+has field 'is_test' => (
+	writer => 1,
+	default => !!0,
+);
+
 requires qw(part_1 part_2);
 
 sub day_number ($self)
@@ -94,6 +99,11 @@ sub _print_results ($self, $result)
 
 sub _test ($self, $part, $orig)
 {
+	$self->set_is_test(!!1);
+	defer {
+		$self->set_is_test(!!0);
+	}
+
 	my $test_result;
 	try {
 		$self->_set_input_base('test');
@@ -169,7 +179,7 @@ sub input ($self, $empty_lines = !!0)
 sub debug ($self, $string, $show = !!1)
 {
 	return unless $show;
-	return unless $self->_input_base eq 'test';
+	return unless $self->is_test;
 	say $string;
 }
 
