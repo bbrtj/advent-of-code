@@ -5,6 +5,7 @@ use Time::HiRes qw(time);
 use Term::ANSIColor;
 use builtin qw(trim);
 use Util;
+use Data::Dumper;
 
 use class -role;
 
@@ -180,6 +181,11 @@ sub debug ($self, $string, $show = !!1)
 {
 	return unless $show;
 	return unless $self->is_test;
-	say $string;
+	if (ref $string) {
+		say Dumper($string);
+	}
+	else {
+		say $string;
+	}
 }
 
