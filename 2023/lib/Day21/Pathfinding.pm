@@ -1,6 +1,6 @@
 package Day21::Pathfinding;
 
-use List::Util qw(max);
+use List::Util qw(sum max);
 use builtin qw(weaken indexed);
 
 use class;
@@ -84,7 +84,7 @@ sub prepare_map ($self)
 	return \@map;
 }
 
-sub get_reached_plots ($self, $range, $start = $self->start)
+sub get_reached_plots ($self, $range, $start = $self->start, $swap = !!0)
 {
 	my ($sx, $sy) = $start->@*;
 	my $map = $self->prepare_map;
@@ -96,6 +96,7 @@ sub get_reached_plots ($self, $range, $start = $self->start)
 	}
 
 	my $start_status = ($sx + $sy + $range) % 2;
+	$start_status = 1 - $start_status if $swap;
 	my $total = 0;
 
 	# do the pathfinding
@@ -120,37 +121,54 @@ sub get_reached_plots ($self, $range, $start = $self->start)
 sub get_reached_infinite_plots ($self, $range)
 {
 	my ($sx, $sy) = $self->start->@*;
-	my ($mx, $my) = ($self->size_x, $self->size_y);
-	my $total = $self->get_reached_plots($range);
-	my $total_odd = $self->get_reached_plots($range + 1);
-	my $divided = int($range / $mx);
-	my $remainder = $range - $mx * $divided;
+	my $size = $self->size_x;
+	my $n = ($range - $sx) / $size;
+	my $rem = $range - $n * $size;
+	my $uneven = $n % 2 == 1;
 
+	die "I'm not a general algorithm!"
+		unless $n == int($n) && $size == $self->size_y;
+
+	# implementing https://www.reddit.com/r/adventofcode/comments/18o4y0m
+	# with fixes to $sa, $sb, $st
+	# (although my own approach was very similar)
+
+	my $st = $size - 1;
+	my $sa = $size + $rem - 1;
+	my $sb = $rem;
 	my %reached = (
-		N => $self->get_reached_plots($remainder, [$sx, $my - 1]),
-		NE => $self->get_reached_plots($remainder, [$mx - 1, $my - 1]),
-		E => $self->get_reached_plots($remainder, [$mx - 1, $sy]),
-		SE => $self->get_reached_plots($remainder, [$mx - 1, 0]),
-		S => $self->get_reached_plots($remainder, [$sx, 0]),
-		SW => $self->get_reached_plots($remainder, [0, 0]),
-		W => $self->get_reached_plots($remainder, [0, $sy]),
-		NW => $self->get_reached_plots($remainder, [0, $my - 1]),
+		o => $self->get_reached_plots($range, [$sx, $sy], $uneven),
+		e => $self->get_reached_plots($range, [$sx, $sy], !$uneven),
+
+		t1 => $self->get_reached_plots($st, [$size - 1, $sy], $uneven),
+		t2 => $self->get_reached_plots($st, [$sx, $size - 1], $uneven),
+		t3 => $self->get_reached_plots($st, [0, $sy], $uneven),
+		t4 => $self->get_reached_plots($st, [$sx, 0], $uneven),
+
+		a1 => $self->get_reached_plots($sa, [$size - 1, $size - 1], $uneven),
+		a2 => $self->get_reached_plots($sa, [0, $size - 1], $uneven),
+		a3 => $self->get_reached_plots($sa, [0, 0], $uneven),
+		a4 => $self->get_reached_plots($sa, [$size - 1, 0], $uneven),
+
+		b1 => $self->get_reached_plots($sb, [$size - 1, $size - 1], !$uneven),
+		b2 => $self->get_reached_plots($sb, [0, $size - 1], !$uneven),
+		b3 => $self->get_reached_plots($sb, [0, 0], !$uneven),
+		b4 => $self->get_reached_plots($sb, [$size - 1, 0], !$uneven),
 	);
 
-	my $sum = ($total + $total_odd) * $divided ** 2;
-	$sum += $reached{N}
-		+ $reached{E}
-		+ $reached{S}
-		+ $reached{W}
-	;
+	my $o = $reached{o};
+	my $e = $reached{e};
 
-	$sum += ($divided - 1) * 2 * (
-		$reached{NE}
-		+ $reached{SE}
-		+ $reached{SW}
-		+ $reached{NW}
-	);
+	my $a = sum map { $reached{$_} } qw (a1 a2 a3 a4);
+	my $b = sum map { $reached{$_} } qw (b1 b2 b3 b4);
+	my $t = sum map { $reached{$_} } qw (t1 t2 t3 t4);
 
-	return $sum;
+	return
+		($n - 1) ** 2 * $o
+		+ $n ** 2 * $e
+		+ ($n - 1) * $a
+		+ $n * $b
+		+ $t
+		;
 }
 

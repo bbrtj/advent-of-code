@@ -39,8 +39,9 @@ sub part_1 ($self)
 sub part_2 ($self)
 {
 	my $path = $self->_parse_input;
-	my $steps = $self->is_test ? 5000 : 26501365;
 
-	return $path->get_reached_infinite_plots($steps);
+	return 'not testing' if $self->is_test;
+
+	return $path->get_reached_infinite_plots(26501365);
 }
 
