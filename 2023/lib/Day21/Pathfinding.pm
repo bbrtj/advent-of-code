@@ -2,6 +2,7 @@ package Day21::Pathfinding;
 
 use List::Util qw(sum max);
 use builtin qw(weaken indexed);
+use Util qw(parallel_map);
 
 use class;
 
@@ -137,24 +138,26 @@ sub get_reached_infinite_plots ($self, $range)
 	my $sa = $size + $rem - 1;
 	my $sb = $rem;
 	my %reached = (
-		o => $self->get_reached_plots($range, [$sx, $sy], $uneven),
-		e => $self->get_reached_plots($range, [$sx, $sy], !$uneven),
+		o => [$range, [$sx, $sy], $uneven],
+		e => [$range, [$sx, $sy], !$uneven],
 
-		t1 => $self->get_reached_plots($st, [$size - 1, $sy], $uneven),
-		t2 => $self->get_reached_plots($st, [$sx, $size - 1], $uneven),
-		t3 => $self->get_reached_plots($st, [0, $sy], $uneven),
-		t4 => $self->get_reached_plots($st, [$sx, 0], $uneven),
+		t1 => [$st, [$size - 1, $sy], $uneven],
+		t2 => [$st, [$sx, $size - 1], $uneven],
+		t3 => [$st, [0, $sy], $uneven],
+		t4 => [$st, [$sx, 0], $uneven],
 
-		a1 => $self->get_reached_plots($sa, [$size - 1, $size - 1], $uneven),
-		a2 => $self->get_reached_plots($sa, [0, $size - 1], $uneven),
-		a3 => $self->get_reached_plots($sa, [0, 0], $uneven),
-		a4 => $self->get_reached_plots($sa, [$size - 1, 0], $uneven),
+		a1 => [$sa, [$size - 1, $size - 1], $uneven],
+		a2 => [$sa, [0, $size - 1], $uneven],
+		a3 => [$sa, [0, 0], $uneven],
+		a4 => [$sa, [$size - 1, 0], $uneven],
 
-		b1 => $self->get_reached_plots($sb, [$size - 1, $size - 1], !$uneven),
-		b2 => $self->get_reached_plots($sb, [0, $size - 1], !$uneven),
-		b3 => $self->get_reached_plots($sb, [0, 0], !$uneven),
-		b4 => $self->get_reached_plots($sb, [$size - 1, 0], !$uneven),
+		b1 => [$sb, [$size - 1, $size - 1], !$uneven],
+		b2 => [$sb, [0, $size - 1], !$uneven],
+		b3 => [$sb, [0, 0], !$uneven],
+		b4 => [$sb, [$size - 1, 0], !$uneven],
 	);
+
+	%reached = parallel_map { $_ => $self->get_reached_plots($reached{$_}->@*) } keys %reached;
 
 	my $o = $reached{o};
 	my $e = $reached{e};
