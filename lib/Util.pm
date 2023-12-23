@@ -49,30 +49,33 @@ sub parallel_map :prototype(&@) ($sub, @items)
 		}
 		else {
 			# child
-			my @results;
 			for (my $i = $fork_no; $i < @items; $i += $forks) {
 				local $_ = $items[$i];
-				push @results, $sub->();
+				say join "\x00", $sub->();
 			}
 
-			say join "\x00", @results;
 			exit;
 		}
 	}
 
 	# gather results
 	for my $fork_no (0 .. $forks - 1) {
-		my $output = readline $handles[$fork_no];
-		chomp $output;
-		close $handles[$fork_no] or die "Can't close: $!";
-
 		my $last = $fork_no;
-		foreach my $result (split /\x00/, $output) {
-			$items[$last] = $result;
+		while (my $output = readline $handles[$fork_no]) {
+			chomp $output;
+
+			my @arr = split /\x00/, $output;
+			$items[$last] = @arr > 1 ? \@arr : $arr[0];
 			$last += $forks;
 		}
-
+		close $handles[$fork_no] or die "Can't close: $!";
 		waitpid $pids[$fork_no], 0;
+	}
+
+	foreach my $ind (reverse keys @items) {
+		if (is_arrayref $items[$ind]) {
+			splice @items, $ind, 1, $items[$ind]->@*;
+		}
 	}
 
 	return @items;
