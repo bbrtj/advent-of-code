@@ -156,7 +156,6 @@ sub build_simple_graph ($self, $map, $sx, $sy, $ex, $ey)
 
 		while (1) {
 			my @others = $current->{connections}->@*;
-				# say "going at $current->{pos_x}:$current->{pos_y}: " . scalar @others if $current;
 
 			$visited{$current} = $current;
 			$walked += 1;
@@ -181,7 +180,7 @@ sub build_simple_graph ($self, $map, $sx, $sy, $ex, $ey)
 					&& $_->{connections}->@* > 2
 				} @others;
 				$current = $peek;
-				# $walked += 1;
+				$walked += 1;
 
 				last;
 			}
@@ -209,17 +208,15 @@ sub find_longest_path_no_slopes ($self, $start, $end)
 	my $connections = $self->build_simple_graph($map, $sx, $sy, $ex, $ey);
 
 	# do the pathfinding
-	my @next = ([$map->[$sy][$sx], {$map->[$sy][$sx] => 1}, 0]);
+	my @next = ([$map->[$sy][$sx], {$map->[$sy][$sx] => 1}, -1]);
 	my $end_node = $map->[$ey][$ex];
 	my $longest = 0;
-	my $total = 0;
 
 	while (my $current_item = pop @next) {
 		my ($current, $history, $walked) = $current_item->@*;
 		$history->{$current} = 1;
 		if ($current == $end_node) {
 			$longest = max $longest, $walked;
-			say $total . " $longest" if ++$total % 1000 == 0;
 			next;
 		}
 
