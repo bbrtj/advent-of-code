@@ -29,6 +29,8 @@ sub part_1 ($self)
 
 sub part_2 ($self)
 {
-	...
+	my $trajectories = $self->_parse_input;
+
+	return $trajectories->magic_bullet;
 }
 

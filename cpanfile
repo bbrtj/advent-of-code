@@ -11,6 +11,7 @@ requires 'Lingua::EN::Numbers';
 requires 'Math::Utils';
 requires 'Sereal';
 requires 'List::BinarySearch';
+requires 'Math::Matrix';
 
 # may uncomment for speed
 # requires 'MooX::XSConstructor';

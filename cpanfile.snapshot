@@ -124,6 +124,15 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.62
       Test::More 0.98
       perl 5.008000
+  Math-Matrix-0.94
+    pathname: P/PJ/PJACKLAM/Math-Matrix-0.94.tar.gz
+    provides:
+      Math::Matrix 0.94
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 6.58
+      Math::Trig 1.06
+      Scalar::Util 1
   Math-Utils-1.14
     pathname: J/JG/JGAMBLE/Math-Utils-1.14.tar.gz
     provides:
